@@ -18,5 +18,5 @@ ansible-playbook -i ansible/inventories/docker/hosts.ini ansible/playbooks/11_do
 ```
 
 ## 유튜브 영상 찾아보기
-- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=09+docker+management)
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=openstack+ansible+docker+management)
 

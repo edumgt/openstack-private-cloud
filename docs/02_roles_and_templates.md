@@ -11,5 +11,5 @@
 - 환경(dev/stage/prod) 변수만 바꿔도 동일한 자동화
 
 ## 유튜브 영상 찾아보기
-- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=02+roles+and+templates)
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=openstack+ansible+roles+and+templates)
 

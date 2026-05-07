@@ -12,5 +12,5 @@ ansible-playbook -i ansible/inventories/dev/hosts.ini ansible/playbooks/11_deplo
 ```
 
 ## 유튜브 영상 찾아보기
-- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=03+docker+with+ansible)
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=openstack+ansible+docker+with+ansible)
 

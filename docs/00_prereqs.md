@@ -32,5 +32,5 @@ aws sts get-caller-identity
 - 원격이면 `ansible/inventories/docker/hosts.ini`에 IP/계정을 추가
 
 ## 유튜브 영상 찾아보기
-- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=00+prereqs)
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=openstack+ansible+prereqs)
 

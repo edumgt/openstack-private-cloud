@@ -319,5 +319,5 @@ curl http://127.0.0.1:11434/api/tags
 - [Kolla-Ansible Air-Gapped](https://docs.openstack.org/kolla-ansible/latest/admin/advanced-configuration.html)
 
 ## 유튜브 영상 찾아보기
-- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=airgap+config)
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=openstack+vm+image+airgap+config)
 

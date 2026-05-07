@@ -27,5 +27,5 @@ ansible -i ansible/inventories/local/hosts.ini local -m setup | head
 예시는 `ansible/roles/common/tasks/main.yml`에서 확인하세요.
 
 ## 유튜브 영상 찾아보기
-- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=02+inventory+vars)
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=openstack+ansible+inventory+vars)
 

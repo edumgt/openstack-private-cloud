@@ -20,5 +20,5 @@ ansible-playbook -i ansible/inventories/dev/hosts.ini ansible/playbooks/00_ping.
 ```
 
 ## 유튜브 영상 찾아보기
-- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=01+ansible+basics)
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=openstack+ansible+ansible+basics)
 

@@ -104,5 +104,5 @@
 - `lab/rag_finance/data/sample_finance_docs.jsonl`
 
 ## 유튜브 영상 찾아보기
-- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=finance+rag+lab+curriculum)
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=openstack+ansible+finance+rag+lab+curriculum)
 

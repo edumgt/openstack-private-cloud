@@ -197,5 +197,5 @@ VBoxManage modifyvm "ansible-openstack-lab" \
 | VM 화면이 검은색 | headless 모드 | `VBoxManage startvm ... --type gui` 로 변경 |
 
 ## 유튜브 영상 찾아보기
-- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=virtualbox+test)
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=openstack+vm+image+virtualbox+test)
 
