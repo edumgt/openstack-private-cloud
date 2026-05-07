@@ -1,0 +1,5 @@
+{"doc_id":"D001","title":"금리 민감도와 듀레이션 관리","category":"interest_rate_risk","content":"장기 채권 비중이 높을수록 금리 상승 시 평가손실 위험이 커진다. 듀레이션 단축과 금리 스왑을 통해 민감도를 조절할 수 있다.","tags":["duration","swap","hedge"]}
+{"doc_id":"D002","title":"변동성 급등 구간의 옵션 포지션 점검","category":"derivatives_risk","content":"내재변동성 급등 구간에서는 감마 노출과 베가 노출이 손익 변동성을 확대한다. 델타 중립 재조정 주기를 짧게 가져가야 한다.","tags":["option","vega","gamma"]}
+{"doc_id":"D003","title":"환율 리스크 헤지 전략","category":"fx_risk","content":"수출입 포지션은 선물환과 통화옵션을 조합해 환율 변동 리스크를 관리할 수 있다. 만기 분산은 롤오버 리스크를 완화한다.","tags":["fx","forward","option"]}
+{"doc_id":"D004","title":"유동성 리스크와 현금성 자산 버퍼","category":"liquidity_risk","content":"스트레스 상황에서 매도 호가 공백이 확대되면 유동성 비용이 급증한다. 현금성 자산 버퍼와 비상 조달 라인을 사전에 확보해야 한다.","tags":["liquidity","stress_test","buffer"]}
+{"doc_id":"D005","title":"신용 스프레드 확대 시 포트폴리오 방어","category":"credit_risk","content":"신용 스프레드 확대 국면에서는 하이일드 비중을 축소하고 우량등급 중심으로 재배분하는 전략이 유효하다.","tags":["credit","spread","portfolio"]}
