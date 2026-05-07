@@ -284,7 +284,8 @@ pip install -r requirements.txt
 uvicorn web_tester.app:app --host 0.0.0.0 --port 8000
 ```
 
-브라우저에서 `http://127.0.0.1:8000` 접속 후 아래 테스트를 수행할 수 있습니다.
+`--host 0.0.0.0`은 외부 접속 허용 바인딩이며, 로컬에서는 브라우저에서
+`http://127.0.0.1:8000`으로 접속해 아래 테스트를 수행할 수 있습니다.
 - 전체 Python 소스 Smoke Test
 - 금융공학 RAG 질의 테스트
 - Mock OpenStack 데이터 테스트

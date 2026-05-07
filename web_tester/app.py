@@ -68,7 +68,7 @@ def _load_module(path: Path) -> tuple[bool, str | None]:
     try:
         spec.loader.exec_module(module)
     except Exception as exc:  # noqa: BLE001
-        return False, f"{path.name}:{type(exc).__name__}"
+        return False, f"{path.name}:{type(exc).__name__}:{exc}"
     return True, None
 
 
@@ -112,7 +112,7 @@ def list_python_sources() -> dict[str, Any]:
 @app.post("/api/python/smoke-test")
 def smoke_test(request: SmokeTestRequest) -> dict[str, Any]:
     targets = request.targets or PY_SOURCE_FILES
-    unknown_targets = [target for target in targets if target not in PY_SOURCE_MAP]
+    unknown_targets = sorted(set(targets) - set(PY_SOURCE_MAP))
     if unknown_targets:
         raise HTTPException(
             status_code=400,
