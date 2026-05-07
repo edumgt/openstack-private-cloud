@@ -270,6 +270,24 @@ python -m lab.rag_finance.cli \
 3. 실제 사내 문서(리서치 노트, 정책 문서)로 데이터 교체
 4. 답변 품질/근거 추적성/재현성을 체크리스트로 검증
 
+## 13. FastAPI + Vanilla JS/Tailwind 웹 테스트 모듈
+
+Python 소스를 웹에서 테스트할 수 있도록 FastAPI 백엔드와 Vanilla JS + Tailwind 프론트엔드 모듈을 추가했습니다.
+
+### 13.1 실행
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -U pip
+pip install -r requirements.txt
+
+uvicorn web_tester.app:app --host 0.0.0.0 --port 8000
+```
+
+브라우저에서 `http://127.0.0.1:8000` 접속 후 아래 테스트를 수행할 수 있습니다.
+- 전체 Python 소스 Smoke Test
+- 금융공학 RAG 질의 테스트
+- Mock OpenStack 데이터 테스트
+
 ## 유튜브 영상 찾아보기
 - [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=openstack+private+cloud+ansible+tutorial)
-
