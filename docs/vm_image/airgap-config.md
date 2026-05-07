@@ -196,6 +196,84 @@ clouds:
     identity_api_version: 3
 ```
 
+### 3.8 Docker + Ollama + OpenStack 사내망 서비스 활용 사례
+
+사내망에서 OpenStack을 사용하면 **LLM 추론 서버와 업무 애플리케이션을 분리**해 운영하기 좋습니다.
+
+- **Inference VM (GPU 장비 연결)**: Docker 기반 `ollama` 컨테이너 운영
+- **App VM**: Python 서비스(FastAPI/배치)에서 내부망 Ollama API 호출
+- **OpenStack 네트워크 분리**: 관리망/서비스망/데이터망 분리
+- **LB/VIP(선택)**: Octavia로 다중 추론 노드 앞단 단일 접점 제공
+
+예시 배치:
+
+1. `llm-infer-01` (GPU flavor): `10.10.20.11:11434`  
+2. `llm-infer-02` (GPU flavor): `10.10.20.12:11434`  
+3. `llm-vip` (Octavia VIP): `10.10.20.100:11434`  
+4. `llm-app-01`: Python 서비스에서 `http://10.10.20.100:11434` 호출
+
+컨테이너 실행 예시:
+```bash
+# GPU 서버(드라이버/CUDA 런타임 준비 완료 가정)
+docker run -d --name ollama --restart unless-stopped \
+  --gpus all \
+  -v ollama-data:/root/.ollama \
+  -p 11434:11434 \
+  ollama/ollama:latest
+
+# CPU 서버(테스트/개발용)
+docker run -d --name ollama --restart unless-stopped \
+  -v ollama-data:/root/.ollama \
+  -p 11434:11434 \
+  ollama/ollama:latest
+```
+
+운영 팁:
+- GPU 노드에는 OpenStack flavor에 `pci_passthrough:alias` 또는 vGPU 정책을 반영합니다.
+- 모델 파일는 볼륨(Cinder) 또는 공유 스토리지에 저장해 재배포 시간을 줄입니다.
+- 내부 DNS에 `llm.internal.local` 같은 서비스 이름을 등록해 앱 설정을 단순화합니다.
+
+### 3.9 사내 GPU 장비 기준 Python LLM 호출 예시
+
+#### 3.9.1 단일 Ollama 노드 호출 (requests)
+```python
+import requests
+
+OLLAMA_URL = "http://10.10.20.11:11434/api/generate"
+
+payload = {
+    "model": "qwen2.5:7b",
+    "prompt": "사내 인프라 운영 점검 체크리스트를 5개로 정리해줘.",
+    "stream": False,
+}
+
+resp = requests.post(OLLAMA_URL, json=payload, timeout=120)
+resp.raise_for_status()
+print(resp.json()["response"])
+```
+
+#### 3.9.2 OpenStack LB(VIP) 경유 호출 (장애 대응 포함)
+```python
+import requests
+
+VIP_URL = "http://10.10.20.100:11434/api/generate"
+
+def ask_llm(prompt: str) -> str:
+    payload = {"model": "llama3.1:8b", "prompt": prompt, "stream": False}
+    with requests.Session() as session:
+        resp = session.post(VIP_URL, json=payload, timeout=180)
+        resp.raise_for_status()
+        return resp.json()["response"]
+
+print(ask_llm("OpenStack 사내망 운영 시 보안 점검 항목을 요약해줘."))
+```
+
+#### 3.9.3 GPU 상태 점검(서버 측)
+```bash
+nvidia-smi
+curl http://127.0.0.1:11434/api/tags
+```
+
 ---
 
 ## 4. 폐쇄망 환경 점검 체크리스트
@@ -212,6 +290,8 @@ clouds:
 | 6 | Ansible ping 확인 | `ansible all -i ansible/inventories/local/hosts.ini -m ping` | ☐ |
 | 7 | Docker 내부 레지스트리 pull 테스트 | `docker pull <내부-레지스트리-IP>:5000/nginx:latest` | ☐ |
 | 8 | OpenStack API 엔드포인트 응답 | `openstack endpoint list` | ☐ |
+| 9 | Ollama API 헬스 확인 | `curl http://<ollama-host>:11434/api/tags` | ☐ |
+| 10 | GPU 인식 확인 | `nvidia-smi` | ☐ |
 
 ---
 
@@ -226,6 +306,7 @@ clouds:
 | `~/.config/openstack/clouds.yaml` | OpenStack 내부 엔드포인트 |
 | `ansible/group_vars/all.yml` | docker_registry, openstack vars |
 | `ansible.cfg` | collections_path (오프라인 경로) |
+| 애플리케이션 `.env` | `OLLAMA_BASE_URL`, `OLLAMA_MODEL` |
 
 ---
 
