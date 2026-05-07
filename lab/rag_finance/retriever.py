@@ -52,9 +52,13 @@ class TfidfRetriever:
                 tf = count / max_tf
                 vector[term] = tf * self._idf.get(term, 0.0)
             self._vectors[doc_id] = vector
-            self._doc_norm[doc_id] = math.sqrt(sum(weight**2 for weight in vector.values()))
+            self._doc_norm[doc_id] = math.sqrt(
+                sum(weight**2 for weight in vector.values())
+            )
 
-    def search(self, query: str, top_k: int = 3) -> list[tuple[FinanceDocument, float]]:
+    def search(
+        self, query: str, top_k: int = 3
+    ) -> list[tuple[FinanceDocument, float]]:
         """질의와 가장 유사한 문서를 반환한다."""
         query_terms = Counter(tokenize(query))
         if not query_terms:
@@ -66,7 +70,9 @@ class TfidfRetriever:
             for term, count in query_terms.items()
             if term in self._vocabulary
         }
-        query_norm = math.sqrt(sum(weight**2 for weight in query_vector.values()))
+        query_norm = math.sqrt(
+            sum(weight**2 for weight in query_vector.values())
+        )
         if query_norm == 0:
             return []
 

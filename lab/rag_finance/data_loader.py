@@ -47,5 +47,7 @@ def iter_document_texts(
 ) -> Iterable[tuple[str, str]]:
     """문서별 결합 텍스트를 생성한다."""
     for doc in documents:
-        combined = " ".join([doc.title, doc.category, doc.content, " ".join(doc.tags)])
+        combined = " ".join(
+            [doc.title, doc.category, doc.content, " ".join(doc.tags)]
+        )
         yield doc.doc_id, combined
