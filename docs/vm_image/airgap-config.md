@@ -230,7 +230,7 @@ docker run -d --name ollama --restart unless-stopped \
 
 운영 팁:
 - GPU 노드에는 OpenStack flavor에 `pci_passthrough:alias` 또는 vGPU 정책을 반영합니다.
-- 모델 파일는 볼륨(Cinder) 또는 공유 스토리지에 저장해 재배포 시간을 줄입니다.
+- 모델 파일은 볼륨(Cinder) 또는 공유 스토리지에 저장해 재배포 시간을 줄입니다.
 - 내부 DNS에 `llm.internal.local` 같은 서비스 이름을 등록해 앱 설정을 단순화합니다.
 
 ### 3.9 사내 GPU 장비 기준 Python LLM 호출 예시
