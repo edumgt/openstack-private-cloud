@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
@@ -17,6 +18,9 @@ APP_ROOT = Path(__file__).resolve().parent
 REPO_ROOT = APP_ROOT.parent
 STATIC_DIR = APP_ROOT / "static"
 INDEX_HTML = STATIC_DIR / "index.html"
+DEFAULT_RAG_DATASET = (
+    REPO_ROOT / "lab" / "rag_finance" / "data" / "sample_finance_docs.jsonl"
+)
 
 PY_SOURCE_FILES = [
     "lab/rag_finance/__init__.py",
@@ -28,6 +32,7 @@ PY_SOURCE_FILES = [
     "ansible/files/docker_bench_to_html.py",
     "archive/legacy/scripts/render_captures.py",
 ]
+PY_SOURCE_MAP = {source: REPO_ROOT / source for source in PY_SOURCE_FILES}
 
 app = FastAPI(
     title="openstack-private-cloud python web tester",
@@ -59,8 +64,26 @@ def _load_module(path: Path) -> tuple[bool, str | None]:
     try:
         spec.loader.exec_module(module)
     except Exception as exc:  # noqa: BLE001
-        return False, f"{type(exc).__name__}: {exc}"
+        return False, type(exc).__name__
     return True, None
+
+
+def _resolve_dataset_path(dataset: str | None) -> Path:
+    if dataset:
+        resolved = (REPO_ROOT / dataset).resolve()
+    else:
+        resolved = DEFAULT_RAG_DATASET.resolve()
+
+    if not resolved.is_relative_to(REPO_ROOT.resolve()):
+        raise HTTPException(status_code=400, detail="dataset 경로는 repo 내부만 허용됩니다.")
+    if not resolved.exists():
+        raise HTTPException(status_code=404, detail="dataset 파일이 존재하지 않습니다.")
+    return resolved
+
+
+@lru_cache(maxsize=8)
+def _get_pipeline(dataset_path: str) -> FinanceRAGPipeline:
+    return FinanceRAGPipeline(dataset_path=dataset_path)
 
 
 @app.get("/", response_class=FileResponse)
@@ -81,7 +104,7 @@ def list_python_sources() -> dict[str, Any]:
 @app.post("/api/python/smoke-test")
 def smoke_test(request: SmokeTestRequest) -> dict[str, Any]:
     targets = request.targets or PY_SOURCE_FILES
-    unknown_targets = [target for target in targets if target not in PY_SOURCE_FILES]
+    unknown_targets = [target for target in targets if target not in PY_SOURCE_MAP]
     if unknown_targets:
         raise HTTPException(
             status_code=400,
@@ -90,7 +113,7 @@ def smoke_test(request: SmokeTestRequest) -> dict[str, Any]:
 
     results: list[dict[str, Any]] = []
     for target in targets:
-        full_path = REPO_ROOT / target
+        full_path = PY_SOURCE_MAP[target]
         if not full_path.exists():
             results.append(
                 {
@@ -115,23 +138,13 @@ def smoke_test(request: SmokeTestRequest) -> dict[str, Any]:
 
 @app.post("/api/rag/query")
 def rag_query(request: RagQueryRequest) -> dict[str, Any]:
-    dataset = (
-        request.dataset
-        if request.dataset
-        else str(
-            REPO_ROOT
-            / "lab"
-            / "rag_finance"
-            / "data"
-            / "sample_finance_docs.jsonl"
-        )
-    )
-    pipeline = FinanceRAGPipeline(dataset_path=dataset)
+    dataset_path = _resolve_dataset_path(request.dataset)
+    pipeline = _get_pipeline(str(dataset_path))
     evidence = pipeline.retrieve(query=request.query, top_k=request.top_k)
     return {
         "query": request.query,
         "top_k": request.top_k,
-        "dataset": dataset,
+        "dataset": str(dataset_path),
         "draft_answer": pipeline.draft_answer(
             query=request.query, top_k=request.top_k
         ),
