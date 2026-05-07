@@ -68,7 +68,7 @@ def _load_module(path: Path) -> tuple[bool, str | None]:
     try:
         spec.loader.exec_module(module)
     except Exception as exc:  # noqa: BLE001
-        return False, type(exc).__name__
+        return False, f"{path.name}:{type(exc).__name__}"
     return True, None
 
 
@@ -84,7 +84,14 @@ def _resolve_dataset_path(dataset_key: str | None) -> Path:
 
 @lru_cache(maxsize=8)
 def _get_pipeline(dataset_path: str) -> FinanceRAGPipeline:
+    """동일 데이터셋 요청에 대해 파이프라인 재생성을 줄이기 위한 캐시."""
     return FinanceRAGPipeline(dataset_path=dataset_path)
+
+
+def _token_doc() -> dict[str, Any]:
+    return mock_openstack_api.token_doc(
+        host="127.0.0.1", keystone_port=5000, nova_port=8774
+    )
 
 
 @app.get("/", response_class=FileResponse)
@@ -181,18 +188,14 @@ def mock_openstack_dashboard_html() -> dict[str, str]:
 
 @app.get("/api/mock-openstack/token-doc")
 def mock_openstack_token_doc() -> dict[str, Any]:
-    return mock_openstack_api.token_doc(
-        host="127.0.0.1", keystone_port=5000, nova_port=8774
-    )
+    return _token_doc()
 
 
 @app.get("/api/mock-openstack/pretty-token-doc")
 def mock_openstack_pretty_token_doc() -> dict[str, str]:
     return {
         "token_doc_json": json.dumps(
-            mock_openstack_api.token_doc(
-                host="127.0.0.1", keystone_port=5000, nova_port=8774
-            ),
+            _token_doc(),
             ensure_ascii=False,
             indent=2,
         )
