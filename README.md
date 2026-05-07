@@ -144,6 +144,19 @@ aws ec2 describe-instances --region ap-northeast-2
 az vm list -o table
 ```
 
+### 9.4 OpenStack 리소스와 AWS 대응 리소스 설명
+이 저장소의 강의/플레이북 흐름 기준으로, 아래처럼 OpenStack 리소스를 AWS 리소스와 1:1에 가깝게 비교해 학습할 수 있습니다.
+
+| OpenStack 리소스 | AWS 대응 리소스 | 핵심 설명 | 이 저장소에서 연결되는 학습 지점 |
+|---|---|---|---|
+| Keystone (User/Project/Role) | IAM (User/Group/Role/Policy) | 인증/권한 관리 계층. Keystone은 프로젝트(tenant) 중심, AWS는 계정/정책 중심으로 접근합니다. | `lecture14/README.md`, `lecture14/lecture.yml` |
+| Neutron Network/Subnet/Router/SG/FIP | VPC/Subnet/Route Table/SG/Elastic IP | 가상 네트워크 구성 요소. 라우팅/보안그룹/공인 IP를 각각 대응해 이해하면 운영 모델 전환이 쉬워집니다. | `lecture12/README.md`, `lecture17/README.md`, `ansible/playbooks/20_aws_create_vpc.yml` |
+| Nova Instance | EC2 Instance | 가상머신 컴퓨트 리소스. 생성/삭제/상태 점검/접속 자동화 흐름이 유사합니다. | `lecture16/README.md`, `ansible/playbooks/21_aws_create_ec2.yml` |
+| Glance Image | AMI | 인스턴스 생성용 베이스 이미지 저장소. 이미지 버전/공유 정책 관리가 핵심입니다. | `lecture15/README.md` |
+| Cinder Volume/Snapshot | EBS Volume/Snapshot | 블록 스토리지. 인스턴스 연결/분리, 스냅샷 기반 백업/복구 흐름이 동일한 운영 패턴을 가집니다. | `lecture17/README.md` |
+| Swift Object Storage | S3 | 오브젝트 스토리지. 버킷/컨테이너, 객체 업로드/수명주기/접근정책 관점에서 비교 가능합니다. | `lecture23/README.md`, `ansible/playbooks/22_aws_s3_bucket.yml` |
+| Horizon Dashboard | AWS Management Console | 웹 UI 기반 운영 콘솔. CLI/Ansible 자동화와 병행해 상태 확인/운영 점검에 사용합니다. | `lecture18/README.md` |
+
 ## 10. GitHub Actions: Docker Hub Push + Local Docker Sync
 ### 10.1 추가된 파일
 - `.github/workflows/docker-publish.yml`
