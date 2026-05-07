@@ -22,6 +22,7 @@ DEFAULT_RAG_DATASET = (
     REPO_ROOT / "lab" / "rag_finance" / "data" / "sample_finance_docs.jsonl"
 )
 RAG_DATASET_MAP = {"sample_finance_docs": DEFAULT_RAG_DATASET}
+MAX_PIPELINE_CACHE_SIZE = 8
 
 PY_SOURCE_FILES = [
     "lab/rag_finance/__init__.py",
@@ -68,7 +69,7 @@ def _load_module(path: Path) -> tuple[bool, str | None]:
     try:
         spec.loader.exec_module(module)
     except Exception as exc:  # noqa: BLE001
-        return False, f"{path.name}:{type(exc).__name__}:{exc}"
+        return False, f"{path.name}: {type(exc).__name__}"
     return True, None
 
 
@@ -82,7 +83,7 @@ def _resolve_dataset_path(dataset_key: str | None) -> Path:
     return resolved
 
 
-@lru_cache(maxsize=8)
+@lru_cache(maxsize=MAX_PIPELINE_CACHE_SIZE)
 def _get_pipeline(dataset_path: str) -> FinanceRAGPipeline:
     """동일 데이터셋 요청에 대해 파이프라인 재생성을 줄이기 위한 캐시."""
     return FinanceRAGPipeline(dataset_path=dataset_path)
