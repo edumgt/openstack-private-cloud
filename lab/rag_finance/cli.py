@@ -12,6 +12,14 @@ DEFAULT_DATASET = (
 )
 
 
+def positive_int(value: str) -> int:
+    """1 이상의 정수만 허용한다."""
+    parsed = int(value)
+    if parsed < 1:
+        raise argparse.ArgumentTypeError("--top-k must be >= 1")
+    return parsed
+
+
 def build_parser() -> argparse.ArgumentParser:
     """CLI 파서 생성."""
     parser = argparse.ArgumentParser(
@@ -20,7 +28,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--query", required=True, help="질의 문장")
     parser.add_argument(
         "--top-k",
-        type=int,
+        type=positive_int,
         default=3,
         help="반환할 근거 문서 개수 (기본값: 3)",
     )

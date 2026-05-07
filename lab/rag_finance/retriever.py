@@ -60,6 +60,9 @@ class TfidfRetriever:
         self, query: str, top_k: int = 3
     ) -> list[tuple[FinanceDocument, float]]:
         """질의와 가장 유사한 문서를 반환한다."""
+        if top_k < 1:
+            raise ValueError("top_k must be >= 1")
+
         query_terms = Counter(tokenize(query))
         if not query_terms:
             return []
@@ -90,4 +93,4 @@ class TfidfRetriever:
                 scored.append((self._documents[doc_id], score))
 
         scored.sort(key=lambda item: item[1], reverse=True)
-        return scored[: max(top_k, 1)]
+        return scored[:top_k]
