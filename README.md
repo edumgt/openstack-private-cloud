@@ -269,3 +269,7 @@ python -m lab.rag_finance.cli \
 2. 샘플 데이터셋으로 검색 정확도 기준선 측정
 3. 실제 사내 문서(리서치 노트, 정책 문서)로 데이터 교체
 4. 답변 품질/근거 추적성/재현성을 체크리스트로 검증
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=openstack+private+cloud+ansible+tutorial)
+

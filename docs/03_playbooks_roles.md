@@ -18,3 +18,7 @@ Role 실행 예시:
 ```bash
 ansible-playbook ansible/playbooks/03_role_web.yml
 ```
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=03+playbooks+roles)
+

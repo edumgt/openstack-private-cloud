@@ -7,3 +7,7 @@
 - `legacy/scripts/`: 레거시 결과 캡처 생성 스크립트
 
 현재 학습에 필요한 실행 경로는 루트의 `lecture01~lecture20`, `ansible/`, `docs/`, `scripts/`입니다.
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=archive+openstack+ansible)
+

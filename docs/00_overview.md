@@ -19,3 +19,7 @@
 7. `docs/09_docker_management.md` (선택)
 8. `docs/10_ci_cd.md` (선택)
 9. OpenStack 실습은 `lecture13/README.md`부터 `lecture20/README.md` 순서로 진행
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=00+overview)
+

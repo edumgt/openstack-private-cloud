@@ -109,3 +109,7 @@ openstack server add floating ip compute2 <FLOATING_IP_2>
 - `./lecture.yml`
 - `./playbook.yml`
 - `../lecture22/playbook.yml`
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=lecture21+openstack+ansible)
+

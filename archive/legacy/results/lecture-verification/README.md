@@ -55,3 +55,7 @@
 | lecture43 | PASS | 0 | localhost : ok=4 changed=0 unreachable=0 failed=0 skipped=1 rescued=0 ignored=0 | ![lecture43](./captures/lecture43.png) | [`lecture43.log`](./logs/lecture43.log) |
 | lecture44 | PASS | 0 | localhost : ok=4 changed=0 unreachable=0 failed=0 skipped=1 rescued=0 ignored=0 | ![lecture44](./captures/lecture44.png) | [`lecture44.log`](./logs/lecture44.log) |
 | lecture45 | PASS | 0 | localhost : ok=4 changed=0 unreachable=0 failed=0 skipped=1 rescued=0 ignored=0 | ![lecture45](./captures/lecture45.png) | [`lecture45.log`](./logs/lecture45.log) |
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=lecture-verification+openstack+ansible)
+

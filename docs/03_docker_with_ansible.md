@@ -10,3 +10,7 @@
 ansible-playbook -i ansible/inventories/dev/hosts.ini ansible/playbooks/10_docker_engine_install.yml
 ansible-playbook -i ansible/inventories/dev/hosts.ini ansible/playbooks/11_deploy_stack.yml
 ```
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=03+docker+with+ansible)
+

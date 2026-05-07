@@ -237,4 +237,8 @@ EOF
 ## 18. 참고 링크
 
 - Nova GitHub (Mirror): https://github.com/openstack/nova  
-- 공식 저장소: https://opendev.org/openstack/nova  
+- 공식 저장소: https://opendev.org/openstack/nova
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=openstack+nova+ansible+guide)
+

@@ -98,3 +98,7 @@ Load Balancer
 - OpenStack Octavia 공식 문서: https://docs.openstack.org/octavia/latest/
 - Amphora 구조 이해
 - Load Balancing 알고리즘 (Round Robin, Least Connections, Source IP)
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=lecture24+openstack+ansible)
+

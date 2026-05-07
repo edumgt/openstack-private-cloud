@@ -58,3 +58,7 @@ sudo -iu stack bash -lc 'cd /opt/devstack/devstack && ./stack.sh'
 - `./lecture.yml`
 - `./playbook.yml`
 - `../ansible/playbooks/30_devstack_host_prep.yml`
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=lecture19+openstack+ansible)
+

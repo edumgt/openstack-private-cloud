@@ -295,3 +295,7 @@ Octavia + Swift + (필요 시 NFS/Manila)
 ---
 
 # END
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=openstack+swift+octavia+design)
+
