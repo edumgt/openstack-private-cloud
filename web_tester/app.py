@@ -21,6 +21,7 @@ INDEX_HTML = STATIC_DIR / "index.html"
 DEFAULT_RAG_DATASET = (
     REPO_ROOT / "lab" / "rag_finance" / "data" / "sample_finance_docs.jsonl"
 )
+RAG_DATASET_MAP = {"sample_finance_docs": DEFAULT_RAG_DATASET}
 
 PY_SOURCE_FILES = [
     "lab/rag_finance/__init__.py",
@@ -51,7 +52,10 @@ class SmokeTestRequest(BaseModel):
 class RagQueryRequest(BaseModel):
     query: str = Field(min_length=1)
     top_k: int = Field(default=3, ge=1)
-    dataset: str | None = None
+    dataset: str | None = Field(
+        default="sample_finance_docs",
+        description="허용된 데이터셋 키 (기본값: sample_finance_docs)",
+    )
 
 
 def _load_module(path: Path) -> tuple[bool, str | None]:
@@ -68,14 +72,11 @@ def _load_module(path: Path) -> tuple[bool, str | None]:
     return True, None
 
 
-def _resolve_dataset_path(dataset: str | None) -> Path:
-    if dataset:
-        resolved = (REPO_ROOT / dataset).resolve()
-    else:
-        resolved = DEFAULT_RAG_DATASET.resolve()
-
-    if not resolved.is_relative_to(REPO_ROOT.resolve()):
-        raise HTTPException(status_code=400, detail="dataset 경로는 repo 내부만 허용됩니다.")
+def _resolve_dataset_path(dataset_key: str | None) -> Path:
+    selected_key = dataset_key or "sample_finance_docs"
+    if selected_key not in RAG_DATASET_MAP:
+        raise HTTPException(status_code=400, detail="지원하지 않는 dataset 키입니다.")
+    resolved = RAG_DATASET_MAP[selected_key].resolve()
     if not resolved.exists():
         raise HTTPException(status_code=404, detail="dataset 파일이 존재하지 않습니다.")
     return resolved
