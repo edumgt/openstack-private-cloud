@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Python 백엔드 웹 테스터</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+  </head>
+  <body class="bg-slate-100 text-slate-900">
+    <main class="mx-auto max-w-6xl p-6 space-y-6">
+      <header class="space-y-2">
+        <h1 class="text-3xl font-bold">Python 백엔드 웹 테스터</h1>
+        <p class="text-slate-600">
+          FastAPI + Vanilla JS + Tailwind 기반으로 Python 소스 기능을 웹에서 테스트합니다.
+        </p>
+      </header>
+
+      <section class="bg-white rounded-xl shadow p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-semibold">1) 전체 Python Smoke Test</h2>
+          <button
+            id="btnSmoke"
+            class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
+          >
+            실행
+          </button>
+        </div>
+        <pre
+          id="smokeResult"
+          class="bg-slate-900 text-slate-100 rounded-lg p-4 overflow-auto text-sm min-h-24"
+        ></pre>
+      </section>
+
+      <section class="bg-white rounded-xl shadow p-5 space-y-4">
+        <h2 class="text-xl font-semibold">2) RAG Query Test</h2>
+        <div class="grid md:grid-cols-4 gap-3">
+          <input
+            id="queryInput"
+            class="md:col-span-3 border rounded-lg px-3 py-2"
+            placeholder="질문을 입력하세요"
+            value="금리 상승기에 듀레이션 리스크를 어떻게 관리하나요?"
+          />
+          <input
+            id="topKInput"
+            class="border rounded-lg px-3 py-2"
+            type="number"
+            min="1"
+            value="3"
+          />
+        </div>
+        <button
+          id="btnRag"
+          class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
+        >
+          질의 실행
+        </button>
+        <pre
+          id="ragResult"
+          class="bg-slate-900 text-slate-100 rounded-lg p-4 overflow-auto text-sm min-h-24"
+        ></pre>
+      </section>
+
+      <section class="bg-white rounded-xl shadow p-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <h2 class="text-xl font-semibold">3) Mock OpenStack Test</h2>
+          <button
+            id="btnMock"
+            class="px-4 py-2 rounded-lg bg-violet-600 text-white hover:bg-violet-700"
+          >
+            조회
+          </button>
+        </div>
+        <pre
+          id="mockResult"
+          class="bg-slate-900 text-slate-100 rounded-lg p-4 overflow-auto text-sm min-h-24"
+        ></pre>
+      </section>
+    </main>
+
+    <script>
+      const formatJson = (data) => JSON.stringify(data, null, 2);
+
+      async function getJson(url, options = {}) {
+        const response = await fetch(url, options);
+        const payload = await response.json();
+        if (!response.ok) {
+          throw new Error(
+            `[${response.status} ${response.statusText}] ${formatJson(payload)}`
+          );
+        }
+        return payload;
+      }
+
+      document.getElementById("btnSmoke").addEventListener("click", async () => {
+        const output = document.getElementById("smokeResult");
+        output.textContent = "실행 중...";
+        try {
+          const data = await getJson("/api/python/smoke-test", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({}),
+          });
+          output.textContent = formatJson(data);
+        } catch (error) {
+          output.textContent = String(error);
+        }
+      });
+
+      document.getElementById("btnRag").addEventListener("click", async () => {
+        const output = document.getElementById("ragResult");
+        output.textContent = "실행 중...";
+        const query = document.getElementById("queryInput").value.trim();
+        const topK = Number(document.getElementById("topKInput").value) || 3;
+
+        try {
+          const data = await getJson("/api/rag/query", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ query, top_k: topK }),
+          });
+          output.textContent = formatJson(data);
+        } catch (error) {
+          output.textContent = String(error);
+        }
+      });
+
+      document.getElementById("btnMock").addEventListener("click", async () => {
+        const output = document.getElementById("mockResult");
+        output.textContent = "실행 중...";
+        try {
+          const data = await getJson("/api/mock-openstack/overview");
+          output.textContent = formatJson(data);
+        } catch (error) {
+          output.textContent = String(error);
+        }
+      });
+    </script>
+  </body>
+</html>
