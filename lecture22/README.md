@@ -61,3 +61,7 @@ ansible-playbook -i ansible/inventories/local/hosts.ini lecture21/playbook.yml -
 - `./lecture.yml`
 - `./playbook.yml`
 - `../scripts/mock_openstack_api.py`
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=lecture22+openstack+ansible)
+

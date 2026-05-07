@@ -18,3 +18,7 @@ ansible -i ansible/inventories/dev/hosts.ini app_hosts -a "uname -a"
 # 플레이북 실행
 ansible-playbook -i ansible/inventories/dev/hosts.ini ansible/playbooks/00_ping.yml
 ```
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=openstack+ansible+ansible+basics)
+

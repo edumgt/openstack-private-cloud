@@ -49,3 +49,7 @@ ansible-playbook -i ansible/inventories/local/hosts.ini ansible/playbooks/20_aws
 ## 8. 참고 파일
 - `./lecture.yml`
 - `./playbook.yml`
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=lecture12+openstack+ansible)
+

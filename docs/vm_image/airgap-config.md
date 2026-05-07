@@ -317,3 +317,7 @@ curl http://127.0.0.1:11434/api/tags
 - [Ansible Galaxy 오프라인](https://docs.ansible.com/ansible/latest/galaxy/user_guide.html#installing-collections-from-a-tar-gz-file)
 - [Docker Private Registry](https://docs.docker.com/registry/deploying/)
 - [Kolla-Ansible Air-Gapped](https://docs.openstack.org/kolla-ansible/latest/admin/advanced-configuration.html)
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=openstack+vm+image+airgap+config)
+

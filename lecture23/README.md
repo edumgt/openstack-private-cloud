@@ -86,3 +86,7 @@ source .lab/real-openstack-openrc
 - OpenStack Swift 공식 문서: https://docs.openstack.org/swift/latest/
 - Swift vs S3 비교
 - Object Storage 모범 사례
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=lecture23+openstack+ansible)
+

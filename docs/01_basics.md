@@ -23,3 +23,7 @@ ansible-playbook ansible/playbooks/00_ping.yml
 ```bash
 ansible-playbook ansible/playbooks/02_nginx.yml --check --diff
 ```
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=openstack+ansible+basics)
+

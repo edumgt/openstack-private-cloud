@@ -195,3 +195,7 @@ VBoxManage modifyvm "ansible-openstack-lab" \
 | pip install 실패 (폐쇄망) | 외부 PyPI 접근 불가 | `--no-index --find-links` 옵션 사용 |
 | Galaxy 컬렉션 not found | COLLECTIONS_PATHS 미설정 | `export ANSIBLE_COLLECTIONS_PATHS=/opt/ansible-openstack/offline/collections` |
 | VM 화면이 검은색 | headless 모드 | `VBoxManage startvm ... --type gui` 로 변경 |
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=openstack+vm+image+virtualbox+test)
+

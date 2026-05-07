@@ -112,3 +112,7 @@ VM 실행 서버
 ---
 
 ## 5. 계층 구조
+
+## 유튜브 영상 찾아보기
+- [YouTube에서 관련 영상 검색하기](https://www.youtube.com/results?search_query=k8s+vs+openstack)
+
