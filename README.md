@@ -1,5 +1,13 @@
 # Python Ansible 기반 Openstack Private Cloud 운영
 
+---
+
+| ◀ 이전 강의 | 📚 커리큘럼 (6 / 10) | 다음 강의 ▶ |
+|:---|:---:|---:|
+| [← AWS EC2 / ALB 실습](https://github.com/edumgt/aws-ec2-alb-lab) | **OpenStack 프라이빗 클라우드** | [Python 퀀트 시스템 →](https://github.com/edumgt/python-quant) |
+
+---
+
 ## 1. 학습 목표
 - Ansible 플레이북 작성/실행/검증 루틴을 익힌다.
 - 인벤토리, 변수, 템플릿, Role을 재사용 가능한 형태로 설계한다.
