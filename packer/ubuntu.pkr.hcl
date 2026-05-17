@@ -1,51 +1,62 @@
 ################################################################################
 # ubuntu.pkr.hcl
-# VirtualBox OVA builder – Ubuntu 22.04 LTS
+# VMware Workstation VMDK 빌더 – Ubuntu 24.04 LTS
 # Packer >= 1.10 (HCL2)
 #
-# Usage:
+# 사전 요구 사항:
+#   - VMware Workstation Pro 17
+#   - ovftool (OVA 변환 시, VMware Workstation 설치 경로에 포함)
+#   - Packer >= 1.10  (https://developer.hashicorp.com/packer/install)
+#
+# 사용법:
 #   packer init   packer/
 #   packer build  packer/
 #
-# The resulting OVA is written to  packer/output-ansible-openstack-lab/
+# 빌드 결과물: packer/output-ansible-openstack-lab/
 ################################################################################
 
 packer {
   required_version = ">= 1.10.0"
   required_plugins {
-    virtualbox = {
-      version = ">= 1.1.1"
-      source  = "github.com/hashicorp/virtualbox"
+    vmware = {
+      version = ">= 1.0.11"
+      source  = "github.com/hashicorp/vmware"
     }
   }
 }
 
 ##############################################################################
-# Variables – override via  -var 'key=value'  or  packer.auto.pkrvars.hcl
+# 변수 – -var 'key=value' 또는 packer.auto.pkrvars.hcl 로 오버라이드
 ##############################################################################
 variable "vm_name" {
   default = "ansible-openstack-lab"
 }
 
 variable "vm_memory_mb" {
-  default = "4096"
+  # DevStack 최소 8 GB, 권장 16 GB
+  default = "16384"
 }
 
 variable "vm_cpus" {
-  default = "2"
+  default = "4"
 }
 
 variable "disk_size_mb" {
-  default = "40960"
+  # 80 GB
+  default = "81920"
 }
 
 variable "iso_url" {
-  # Ubuntu 22.04.4 LTS (Jammy) server ISO
-  default = "https://releases.ubuntu.com/22.04/ubuntu-22.04.4-live-server-amd64.iso"
+  # Ubuntu 24.04 LTS (Noble) server ISO
+  # 로컬 ISO 경로 예: "iso/ubuntu-24.04.4-live-server-amd64.iso"
+  # 온라인: "https://releases.ubuntu.com/24.04/ubuntu-24.04.4-live-server-amd64.iso"
+  default = "iso/ubuntu-24.04.4-live-server-amd64.iso"
 }
 
 variable "iso_checksum" {
-  default = "sha256:45f873de9f8cb637345d6e66a583762730bbea30277ef7b32c9c3bd6700a32b2"
+  # sha256 체크섬 – Ubuntu 공식 릴리스 페이지에서 확인
+  # https://releases.ubuntu.com/24.04/SHA256SUMS
+  default = "none"
 }
 
 variable "ssh_username" {
@@ -57,19 +68,20 @@ variable "ssh_password" {
 }
 
 ##############################################################################
-# Source – VirtualBox ISO boot
+# Source – VMware Workstation ISO 부트
 ##############################################################################
-source "virtualbox-iso" "ubuntu" {
+source "vmware-iso" "ubuntu" {
   vm_name       = var.vm_name
-  guest_os_type = "Ubuntu_64"
+  guest_os_type = "ubuntu-64"
   memory        = var.vm_memory_mb
   cpus          = var.vm_cpus
   disk_size     = var.disk_size_mb
+  disk_type_id  = 0
 
   iso_url      = var.iso_url
   iso_checksum = var.iso_checksum
 
-  # Ubuntu 22.04 live-server uses subiquity / cloud-init autoinstall
+  # Ubuntu 24.04 live-server: subiquity / cloud-init autoinstall
   http_directory = "${path.root}/http"
   boot_wait      = "5s"
   boot_command = [
@@ -86,36 +98,42 @@ source "virtualbox-iso" "ubuntu" {
   communicator           = "ssh"
   ssh_username           = var.ssh_username
   ssh_password           = var.ssh_password
-  ssh_timeout            = "30m"
-  ssh_handshake_attempts = 100
+  ssh_timeout            = "40m"
+  ssh_handshake_attempts = 150
 
-  # Export settings
-  format           = "ova"
+  # VMware Workstation 17 하드웨어 버전
+  version = "20"
+
+  # 네트워크: Bridged (WSL2 직접 접근용)
+  network              = "bridged"
+  network_adapter_type = "vmxnet3"
+
+  # VMware 전용 설정
+  vmx_data = {
+    # 중첩 가상화 활성화 – Nova Compute KVM 사용에 필수
+    "vhv.enable"              = "TRUE"
+    "vpmc.enable"             = "TRUE"
+    # 불필요한 하드웨어 비활성화 (VM 크기/속도 최적화)
+    "sound.present"           = "FALSE"
+    "usb.present"             = "FALSE"
+    "mks.enable3d"            = "FALSE"
+    "disk.EnableUUID"         = "TRUE"
+    "tools.syncTime"          = "TRUE"
+    "ethernet0.pcislotnumber" = "32"
+  }
+
   output_directory = "${path.root}/output-${var.vm_name}"
-  export_opts = [
-    "--manifest",
-    "--vsys", "0",
-    "--description", "Ansible + OpenStack Private Cloud Lab VM",
-    "--version", "1.0"
-  ]
-
-  # VirtualBox Guest Additions
-  guest_additions_mode = "disable"
-
-  vboxmanage = [
-    ["modifyvm", "{{.Name}}", "--nat-localhostreachable1", "on"],
-    ["modifyvm", "{{.Name}}", "--audio", "none"],
-    ["modifyvm", "{{.Name}}", "--usb", "off"]
-  ]
+  skip_compaction  = false
+  headless         = true
 }
 
 ##############################################################################
 # Build
 ##############################################################################
 build {
-  sources = ["source.virtualbox-iso.ubuntu"]
+  sources = ["source.vmware-iso.ubuntu"]
 
-  # 1. Wait until cloud-init finishes
+  # 1. cloud-init 완료 대기
   provisioner "shell" {
     inline = [
       "sudo cloud-init status --wait || true"
@@ -123,7 +141,7 @@ build {
     pause_before = "10s"
   }
 
-  # 2. Core provisioning: Python, Ansible, repo content
+  # 2. 핵심 프로비저닝: Python, Ansible, 도구 설치
   provisioner "shell" {
     script          = "${path.root}/scripts/provision.sh"
     execute_command = "echo '${var.ssh_password}' | sudo -S bash '{{.Path}}'"
@@ -132,14 +150,14 @@ build {
     ]
   }
 
-  # 3. Copy repository content into the VM
+  # 3. 레포 콘텐츠 VM에 복사
   provisioner "file" {
     source      = "${path.root}/../"
     destination = "/opt/ansible-openstack"
     generated   = false
   }
 
-  # 4. Post-copy setup (fix ownership, offline pip wheel cache)
+  # 4. 복사 후 설정 (소유권, 오프라인 pip wheel 캐시)
   provisioner "shell" {
     script          = "${path.root}/scripts/post_copy.sh"
     execute_command = "echo '${var.ssh_password}' | sudo -S bash '{{.Path}}'"
@@ -148,7 +166,7 @@ build {
     ]
   }
 
-  # 5. Cleanup to reduce OVA size
+  # 5. 정리 (VM 크기 축소)
   provisioner "shell" {
     script          = "${path.root}/scripts/cleanup.sh"
     execute_command = "echo '${var.ssh_password}' | sudo -S bash '{{.Path}}'"

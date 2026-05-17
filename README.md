@@ -1,5 +1,3 @@
-
-
 ## 1. 학습 목표
 - Ansible 플레이북 작성/실행/검증 루틴을 익힌다.
 - 인벤토리, 변수, 템플릿, Role을 재사용 가능한 형태로 설계한다.
@@ -186,42 +184,45 @@ CONTAINER_NAME=python-ansible-playbook \
 ./scripts/sync_local_docker.sh
 ```
 
-## 11. VM 이미지 (OVA) 빌드 및 폐쇄망 배포
+## 11. VM 이미지 빌드 및 폐쇄망 배포
 
-이 저장소의 모든 Ansible + OpenStack 실습 환경을 **VirtualBox OVA 이미지**로 패키징할 수 있습니다.
+이 저장소의 모든 Ansible + OpenStack 실습 환경을 **VMware Workstation VM**으로 구성할 수 있습니다.
 
 ### 11.1 사전 요구 사항
-- [VirtualBox](https://www.virtualbox.org/wiki/Downloads) >= 6.1
+- [VMware Workstation Pro 17](https://www.vmware.com/products/workstation-pro.html)
 - [Packer](https://developer.hashicorp.com/packer/install) >= 1.10
+- Ubuntu 24.04 LTS Server ISO (`ubuntu-24.04.x-live-server-amd64.iso`)
+- ovftool (OVA 변환 시 — VMware Workstation 설치 경로에 포함)
 
-### 11.2 OVA 빌드
+### 11.2 VM 빌드 (Packer 자동화)
 ```bash
-# Packer 플러그인 초기화 (최초 1회)
+# ISO를 packer/iso/ 폴더에 복사 후 실행
 packer init packer/
 
-# OVA 빌드 (약 30~60분 소요)
+# VM 빌드 (약 30~60분 소요)
 ./scripts/build_ova.sh
 ```
 
 빌드 결과물:
 ```
-packer/output-ansible-openstack-lab/ansible-openstack-lab.ova
+packer/output-ansible-openstack-lab/   ← VMX + VMDK (VMware 직접 사용)
+packer/output-ansible-openstack-lab/ansible-openstack-lab.ova  ← OVA (ovftool 있는 경우)
 ```
 
-### 11.3 VirtualBox에 임포트 및 실행
+### 11.3 VMware Workstation에서 열기
+```
+파일(File) → 열기(Open) → ansible-openstack-lab.vmx 또는 .ova 선택
+```
+
+SSH 접속 (Bridged 네트워크 기준):
 ```bash
-VBoxManage import packer/output-ansible-openstack-lab/ansible-openstack-lab.ova \
-    --vsys 0 --vmname "ansible-openstack-lab"
-VBoxManage startvm "ansible-openstack-lab" --type headless
-
-# SSH 접속 (호스트 포트 2222 → VM 포트 22)
-ssh -p 2222 ansible@127.0.0.1   # 비밀번호: ansible
+ssh ansible@<VM-IP>   # 비밀번호: ansible
 ```
 
-자세한 테스트 절차: [`docs/vm_image/virtualbox-test.md`](docs/vm_image/virtualbox-test.md)
+전체 설치/설정 절차: [`docs/vm_image/vmware-setup.md`](docs/vm_image/vmware-setup.md)
 
 ### 11.4 폐쇄망(Air-Gapped) 환경 배포
-OVA 이미지에는 pip 패키지 wheel, Ansible Galaxy 컬렉션이 미리 번들되어 있습니다.
+VM 이미지에는 pip 패키지 wheel, Ansible Galaxy 컬렉션이 미리 번들되어 있습니다.
 폐쇄망 환경에서의 APT 미러, DNS, NTP, Docker 레지스트리, OpenStack 엔드포인트 설정 방법:
 
 → [`docs/vm_image/airgap-config.md`](docs/vm_image/airgap-config.md)
