@@ -3,23 +3,31 @@ services:
     image: traefik/whoami:latest
     container_name: sample-app
     depends_on:
-      - db
-      - redis
-
+    - db
+    - redis
+    networks:
+    - shared-net
   nginx:
     image: nginx:alpine
     container_name: sample-nginx
     ports:
-      - "8080:80"
+    - 8080:80
     depends_on:
-      - app
-
+    - app
+    networks:
+    - shared-net
   db:
     image: postgres:16-alpine
     container_name: sample-db
     environment:
       POSTGRES_PASSWORD: example
-
+    networks:
+    - shared-net
   redis:
     image: redis:7-alpine
     container_name: sample-redis
+    networks:
+    - shared-net
+networks:
+  shared-net:
+    external: true

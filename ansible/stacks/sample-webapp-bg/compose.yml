@@ -3,23 +3,32 @@ services:
     image: nginx:alpine
     container_name: sample-bg-nginx
     ports:
-      - "8080:8080"
+    - 8080:8080
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    - ./nginx.conf:/etc/nginx/nginx.conf:ro
     depends_on:
-      - blue
-      - green
-
+    - blue
+    - green
+    networks:
+    - shared-net
   blue:
     image: traefik/whoami:latest
     container_name: sample-bg-blue
-    profiles: ["blue"]
+    profiles:
+    - blue
     ports:
-      - "8081:80"
-
+    - 8081:80
+    networks:
+    - shared-net
   green:
     image: traefik/whoami:latest
     container_name: sample-bg-green
-    profiles: ["green"]
+    profiles:
+    - green
     ports:
-      - "8082:80"
+    - 8082:80
+    networks:
+    - shared-net
+networks:
+  shared-net:
+    external: true
