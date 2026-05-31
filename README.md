@@ -1,3 +1,248 @@
+## 0. VMware Workstation VM 기반 OpenStack 실습 환경 구성 (Ansible 없이)
+
+이 섹션은 Ansible 없이 **VMware Workstation VM을 직접 구성**해 OpenStack 실습 환경을 만드는 단계별 가이드입니다.
+Ansible 자동화 강의 이전에 인프라 기반을 수동으로 이해하고 싶은 분을 위한 선행 실습입니다.
+
+---
+
+### 0.1 실습 목표
+- VMware Workstation에서 Controller + Compute 노드 VM 2대를 구성한다.
+- 노드 간 내부 네트워크(관리망/데이터망)와 외부 접근용 NAT 네트워크를 분리한다.
+- Ubuntu 24.04 기반으로 OpenStack 핵심 서비스(Keystone/Glance/Nova/Neutron/Cinder/Horizon)를 수동 설치한다.
+- Horizon 대시보드와 CLI로 VM 인스턴스를 생성해 동작을 확인한다.
+
+---
+
+### 0.2 호스트 PC 최소 요구 사항
+
+| 항목 | 최소 | 권장 |
+|---|---|---|
+| RAM | 16 GB | 32 GB |
+| vCPU | 4코어 | 8코어 이상 |
+| 디스크 여유 | 100 GB | 200 GB (SSD) |
+| OS | Windows 10/11 64-bit | Windows 11 |
+| 소프트웨어 | VMware Workstation Pro 17+ | 동일 |
+
+> **Intel VT-x / AMD-V 가상화 기능이 BIOS에서 활성화**되어 있어야 합니다.
+> VMware Workstation에서 `VM 설정 → 프로세서 → 가상화 Intel VT-x/EPT 또는 AMD-V/RVI 사용`을 체크하세요.
+
+---
+
+### 0.3 VM 구성 설계
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                    Host PC (Windows)                    │
+│                                                         │
+│  ┌──────────────────────┐  ┌──────────────────────────┐ │
+│  │  controller-node     │  │  compute-node            │ │
+│  │  Ubuntu 24.04        │  │  Ubuntu 24.04            │ │
+│  │  vCPU: 4 / RAM: 8GB  │  │  vCPU: 4 / RAM: 6GB     │ │
+│  │  Disk: 60GB          │  │  Disk: 40GB              │ │
+│  │                      │  │                          │ │
+│  │  eth0 (NAT)          │  │  eth0 (NAT)              │ │
+│  │  192.168.x.x         │  │  192.168.x.x             │ │
+│  │                      │  │                          │ │
+│  │  eth1 (Host-Only)    │──│  eth1 (Host-Only)        │ │
+│  │  10.0.0.11/24        │  │  10.0.0.21/24            │ │
+│  │  [관리망 + API]      │  │  [관리망]                │ │
+│  │                      │  │                          │ │
+│  │  eth2 (Host-Only)    │──│  eth2 (Host-Only)        │ │
+│  │  10.0.1.11/24        │  │  10.0.1.21/24            │ │
+│  │  [데이터/터널망]     │  │  [데이터/터널망]         │ │
+│  └──────────────────────┘  └──────────────────────────┘ │
+└─────────────────────────────────────────────────────────┘
+```
+
+| 노드 | 역할 | OpenStack 서비스 |
+|---|---|---|
+| controller-node | 관리·API | Keystone, Glance, Nova(API), Neutron(Server), Cinder(API), Horizon, MariaDB, RabbitMQ, Memcached |
+| compute-node | 컴퓨트 | Nova(Compute), Neutron(OVS Agent) |
+
+---
+
+### 0.4 VMware Workstation 네트워크 설정
+
+VMware `Edit → Virtual Network Editor`에서 가상 네트워크 두 개를 추가합니다.
+
+| VMnet | 유형 | 서브넷 | 용도 |
+|---|---|---|---|
+| VMnet0 | NAT (기본값) | 자동 할당 | 인터넷 접속 (패키지 설치용) |
+| VMnet2 | Host-Only | 10.0.0.0/24 | 관리망 · API 엔드포인트 |
+| VMnet3 | Host-Only | 10.0.1.0/24 | VM 인스턴스 터널(Neutron VXLAN) |
+
+> Host-Only 네트워크는 **DHCP를 비활성화**하고 고정 IP를 직접 부여합니다.
+
+---
+
+### 0.5 VM 생성 절차 (공통)
+
+1. `파일 → 새 가상 머신 → 일반(Typical)` 선택
+2. ISO 경로: `ubuntu-24.04.x-live-server-amd64.iso`
+3. vCPU·RAM·디스크 크기는 [0.3 표](#03-vm-구성-설계) 참고
+4. 네트워크 어댑터:
+   - 어댑터 1 → NAT (VMnet0)
+   - `어댑터 추가 → Host-Only → VMnet2`
+   - `어댑터 추가 → Host-Only → VMnet3`
+5. Ubuntu 설치 완료 후 SSH Server 활성화 확인
+
+---
+
+### 0.6 OS 기본 설정 (두 노드 공통)
+
+```bash
+# 패키지 업데이트
+sudo apt update && sudo apt upgrade -y
+
+# 필수 도구 설치
+sudo apt install -y curl wget git vim net-tools chrony
+
+# 호스트명 설정 (controller-node 예시)
+sudo hostnamectl set-hostname controller-node
+
+# /etc/hosts 편집 (두 노드 모두)
+sudo tee -a /etc/hosts <<'EOF'
+10.0.0.11  controller-node
+10.0.0.21  compute-node
+EOF
+```
+
+고정 IP 설정 (`/etc/netplan/00-installer-config.yaml` 예시, controller-node):
+
+```yaml
+network:
+  version: 2
+  ethernets:
+    eth0:                        # NAT — DHCP 유지
+      dhcp4: true
+    eth1:                        # 관리망
+      dhcp4: false
+      addresses: [10.0.0.11/24]
+    eth2:                        # 터널망
+      dhcp4: false
+      addresses: [10.0.1.11/24]
+```
+
+```bash
+sudo netplan apply
+```
+
+---
+
+### 0.7 OpenStack 수동 설치 순서 (controller-node)
+
+아래 순서로 서비스를 설치합니다. 각 단계는 공식 [OpenStack Installation Guide (Ubuntu)](https://docs.openstack.org/install-guide/) 기반입니다.
+
+#### ① 사전 서비스 설치
+
+```bash
+# MariaDB
+sudo apt install -y mariadb-server python3-pymysql
+sudo mysql_secure_installation
+
+# RabbitMQ
+sudo apt install -y rabbitmq-server
+sudo rabbitmqctl add_user openstack RABBIT_PASS
+sudo rabbitmqctl set_permissions openstack ".*" ".*" ".*"
+
+# Memcached
+sudo apt install -y memcached python3-memcache
+sudo sed -i 's/127.0.0.1/10.0.0.11/' /etc/memcached.conf
+sudo systemctl restart memcached
+
+# Etcd
+sudo apt install -y etcd
+```
+
+#### ② Keystone (인증)
+
+```bash
+# DB 생성
+sudo mysql -e "CREATE DATABASE keystone;"
+sudo mysql -e "GRANT ALL ON keystone.* TO 'keystone'@'%' IDENTIFIED BY 'KEYSTONE_DBPASS';"
+
+# 패키지 설치 및 설정
+sudo apt install -y keystone
+sudo vi /etc/keystone/keystone.conf   # connection, provider 항목 수정
+sudo keystone-manage db_sync
+sudo keystone-manage fernet_setup
+sudo keystone-manage bootstrap \
+  --bootstrap-password ADMIN_PASS \
+  --bootstrap-admin-url http://controller-node:5000/v3/ \
+  --bootstrap-internal-url http://controller-node:5000/v3/ \
+  --bootstrap-public-url http://controller-node:5000/v3/ \
+  --bootstrap-region-id RegionOne
+```
+
+#### ③ Glance → Nova → Neutron → Cinder → Horizon 순 설치
+
+각 서비스 설치 순서:
+
+```text
+Glance   → apt install glance        → DB 생성 → conf 수정 → db_sync → service 재시작
+Nova     → apt install nova-api ...  → DB 생성 → conf 수정 → db_sync → cell 등록
+Neutron  → apt install neutron-...   → DB 생성 → conf 수정 → db_sync → OVS 설정
+Cinder   → apt install cinder-api   → DB 생성 → conf 수정 → db_sync
+Horizon  → apt install openstack-dashboard → apache2 재시작
+```
+
+> 각 서비스 상세 conf 옵션은 `docs/vm_image/manual-install/` 디렉터리의 서비스별 가이드를 참조하세요.
+
+#### ④ compute-node 설정
+
+```bash
+# controller-node에서 수행한 기본 OS 설정 동일하게 적용
+sudo apt install -y nova-compute neutron-openvswitch-agent
+
+# /etc/nova/nova.conf — [DEFAULT] my_ip = 10.0.0.21 설정
+# /etc/neutron/neutron.conf, openvswitch_agent.ini 설정 후
+sudo systemctl restart nova-compute neutron-openvswitch-agent
+```
+
+---
+
+### 0.8 동작 확인
+
+```bash
+# admin 환경변수 로드
+source ~/admin-openrc.sh
+
+# 서비스 목록 확인
+openstack service list
+openstack compute service list
+openstack network agent list
+
+# 테스트 VM 생성
+openstack server create \
+  --image cirros \
+  --flavor m1.tiny \
+  --network private \
+  test-vm-01
+
+openstack server list
+```
+
+Horizon 대시보드 접속: `http://10.0.0.11/dashboard`  
+도메인: `default` / 사용자: `admin` / 비밀번호: `ADMIN_PASS`
+
+---
+
+### 0.9 트러블슈팅 체크리스트
+
+| 증상 | 확인 명령 | 주요 원인 |
+|---|---|---|
+| `openstack` CLI 인증 실패 | `openstack token issue` | admin-openrc.sh OS_AUTH_URL 오타 |
+| Nova compute 서비스 down | `openstack compute service list` | compute-node의 nova.conf `transport_url` 불일치 |
+| 인스턴스 네트워크 없음 | `openstack network agent list` | OVS 브리지 미생성, eth2 IP 오설정 |
+| Horizon 502 Bad Gateway | `sudo systemctl status apache2` | apache2 미시작 또는 포트 충돌 |
+| Glance 이미지 업로드 실패 | `journalctl -u glance-api -n 50` | /var/lib/glance 디렉터리 권한 오류 |
+
+---
+
+> **다음 단계:** Ansible 없이 환경 구성을 완료했다면, `lecture01`부터 Ansible 플레이북으로 동일한 작업을 자동화하는 흐름을 학습합니다.
+
+---
+
 ## 1. 학습 목표
 - Ansible 플레이북 작성/실행/검증 루틴을 익힌다.
 - 인벤토리, 변수, 템플릿, Role을 재사용 가능한 형태로 설계한다.
