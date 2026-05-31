@@ -6,7 +6,7 @@
 LECTURE_ID="lecture01"
 LECTURE_TITLE="Ansible 학습환경 점검과 실행 루틴 정립"
 INSTALL_ENABLED="${INSTALL_ENABLED:-false}"
-REFERENCE_PLAYBOOK="../ansible/playbooks/00_ping.yml"
+REFERENCE_PLAYBOOK="../../ansible/playbooks/00_ping.yml"
 LECTURE_PACKAGES=(
     "python3"
     "python3-pip"
