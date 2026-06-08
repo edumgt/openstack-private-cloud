@@ -295,6 +295,661 @@ ubuntu@controller-node:~$ cat ./openstack_dashboard.md
 ![alt text](./docs/image.png)
 
 
+---
+
+# OpenStack CLI 완벽 가이드
+
+> 설치부터 주요 명령어, openrc 파일 생성까지
+
+---
+
+## 목차
+
+1. [설치](#1-설치)
+2. [openrc 파일 생성 및 인증](#2-openrc-파일-생성-및-인증)
+3. [프로젝트 / 사용자 관리](#3-프로젝트--사용자-관리)
+4. [컴퓨트 (Nova)](#4-컴퓨트-nova)
+5. [이미지 (Glance)](#5-이미지-glance)
+6. [네트워크 (Neutron)](#6-네트워크-neutron)
+7. [볼륨 / 스토리지 (Cinder)](#7-볼륨--스토리지-cinder)
+8. [오브젝트 스토리지 (Swift)](#8-오브젝트-스토리지-swift)
+9. [유용한 팁](#9-유용한-팁)
+
+---
+
+## 1. 설치
+
+### 요구 사항
+
+- Python 3.8 이상
+- pip 최신 버전
+
+### pip으로 설치 (권장)
+
+```bash
+# 기본 설치
+pip install python-openstackclient
+
+# 추가 서비스 플러그인 설치 (필요 시)
+pip install python-cinderclient    # Block Storage (Cinder)
+pip install python-neutronclient   # Network (Neutron)
+pip install python-glanceclient    # Image (Glance)
+pip install python-swiftclient     # Object Storage (Swift)
+pip install python-heatclient      # Orchestration (Heat)
+pip install python-magnumclient    # Container Infra (Magnum)
+```
+
+### 가상환경에 설치 (추천)
+
+```bash
+python3 -m venv openstack-venv
+source openstack-venv/bin/activate
+pip install python-openstackclient
+```
+
+### OS 패키지 매니저로 설치
+
+```bash
+# Ubuntu / Debian
+sudo apt update && sudo apt install python3-openstackclient
+
+# RHEL / CentOS / Rocky Linux
+sudo dnf install python3-openstackclient
+
+# macOS (Homebrew)
+brew install openstackclient
+```
+
+### 설치 확인
+
+```bash
+openstack --version
+# OpenStack Client 6.x.x
+```
+
+---
+
+## 2. openrc 파일 생성 및 인증
+
+openrc 파일은 OpenStack API에 접속하기 위한 환경 변수를 설정하는 쉘 스크립트입니다.
+
+### 기본 openrc 파일 형식
+
+```bash
+# openrc.sh
+#!/usr/bin/env bash
+
+# --- 인증 정보 ---
+export OS_AUTH_URL=https://<keystone-endpoint>:5000/v3
+export OS_IDENTITY_API_VERSION=3
+
+# 프로젝트(테넌트) 정보
+export OS_PROJECT_NAME="my-project"
+export OS_PROJECT_DOMAIN_NAME="Default"
+
+# 사용자 정보
+export OS_USERNAME="my-user"
+export OS_USER_DOMAIN_NAME="Default"
+
+# 비밀번호 (보안상 직접 입력 권장)
+export OS_PASSWORD="my-password"
+
+# 리전 설정 (멀티 리전 환경)
+export OS_REGION_NAME="RegionOne"
+
+# 인터페이스 타입: public / internal / admin
+export OS_INTERFACE=public
+
+# CA 인증서 (자체 서명 인증서 사용 시)
+# export OS_CACERT=/path/to/ca-bundle.crt
+```
+
+### 비밀번호를 파일에 저장하지 않는 방법
+
+```bash
+# openrc.sh (비밀번호 제외)
+export OS_AUTH_URL=https://<keystone-endpoint>:5000/v3
+export OS_IDENTITY_API_VERSION=3
+export OS_PROJECT_NAME="my-project"
+export OS_PROJECT_DOMAIN_NAME="Default"
+export OS_USERNAME="my-user"
+export OS_USER_DOMAIN_NAME="Default"
+export OS_REGION_NAME="RegionOne"
+export OS_INTERFACE=public
+
+# 실행 시 비밀번호 프롬프트
+echo "OpenStack Password: "
+read -sr OS_PASSWORD_INPUT
+export OS_PASSWORD=$OS_PASSWORD_INPUT
+```
+
+### 애플리케이션 자격증명(Application Credentials) 방식 (권장)
+
+```bash
+# Application Credentials 생성
+openstack application credential create my-app-cred \
+  --role member \
+  --description "My app credential"
+
+# 생성된 openrc 파일
+export OS_AUTH_URL=https://<keystone-endpoint>:5000/v3
+export OS_AUTH_TYPE=v3applicationcredential
+export OS_APPLICATION_CREDENTIAL_ID=<credential-id>
+export OS_APPLICATION_CREDENTIAL_SECRET=<credential-secret>
+```
+
+### Horizon(대시보드)에서 openrc 다운로드
+
+1. Horizon 웹 UI 로그인
+2. 오른쪽 상단 사용자 메뉴 → **OpenStack RC File** 클릭
+3. 다운로드된 파일을 소싱
+
+### openrc 파일 적용
+
+```bash
+source openrc.sh
+# 또는
+. openrc.sh
+
+# 적용 확인
+openstack token issue
+```
+
+### clouds.yaml 방식 (멀티 클라우드 환경)
+
+```yaml
+# ~/.config/openstack/clouds.yaml
+clouds:
+  production:
+    auth:
+      auth_url: https://prod-keystone:5000/v3
+      username: my-user
+      password: my-password
+      project_name: my-project
+      user_domain_name: Default
+      project_domain_name: Default
+    region_name: RegionOne
+    interface: public
+    identity_api_version: 3
+
+  staging:
+    auth:
+      auth_url: https://staging-keystone:5000/v3
+      username: my-user
+      password: staging-password
+      project_name: staging-project
+      user_domain_name: Default
+      project_domain_name: Default
+    region_name: RegionOne
+```
+
+```bash
+# 특정 클라우드 환경 선택
+openstack --os-cloud production server list
+export OS_CLOUD=production
+openstack server list
+```
+
+---
+
+## 3. 프로젝트 / 사용자 관리
+
+```bash
+# 프로젝트 목록
+openstack project list
+
+# 프로젝트 생성
+openstack project create --description "Dev 환경" dev-project
+
+# 프로젝트 상세 정보
+openstack project show dev-project
+
+# 프로젝트 삭제
+openstack project delete dev-project
+
+# 사용자 목록
+openstack user list
+
+# 사용자 생성
+openstack user create --password secret123 --email user@example.com new-user
+
+# 사용자에게 역할 부여
+openstack role add --project dev-project --user new-user member
+
+# 역할 목록
+openstack role list
+
+# 사용자의 역할 확인
+openstack role assignment list --user new-user --project dev-project
+```
+
+---
+
+## 4. 컴퓨트 (Nova)
+
+### 서버(인스턴스) 관리
+
+```bash
+# 서버 목록 (현재 프로젝트)
+openstack server list
+
+# 전체 프로젝트 서버 목록 (admin)
+openstack server list --all-projects
+
+# 서버 상세 정보
+openstack server show <server-name-or-id>
+
+# 서버 생성
+openstack server create \
+  --flavor m1.small \
+  --image "Ubuntu 22.04" \
+  --network my-network \
+  --key-name my-keypair \
+  --security-group default \
+  my-server
+
+# 서버 생성 (사용자 데이터 스크립트 포함)
+openstack server create \
+  --flavor m1.medium \
+  --image "Ubuntu 22.04" \
+  --network my-network \
+  --user-data /path/to/cloud-init.sh \
+  my-server-2
+
+# 서버 시작 / 중지 / 재시작
+openstack server start <server>
+openstack server stop <server>
+openstack server reboot <server>
+openstack server reboot --hard <server>   # 강제 재시작
+
+# 서버 삭제
+openstack server delete <server>
+
+# 서버 콘솔 URL
+openstack console url show <server>
+
+# 서버 로그 확인
+openstack console log show <server>
+
+# 서버 상태 대기
+openstack server wait --wait <server>
+```
+
+### 플레이버(Flavor) 관리
+
+```bash
+# 플레이버 목록
+openstack flavor list
+
+# 플레이버 상세 정보
+openstack flavor show m1.small
+
+# 플레이버 생성 (admin)
+openstack flavor create \
+  --vcpus 4 \
+  --ram 8192 \
+  --disk 80 \
+  --public \
+  m1.xlarge
+```
+
+### 키페어 관리
+
+```bash
+# 키페어 목록
+openstack keypair list
+
+# 키페어 생성 (프라이빗 키 자동 저장)
+openstack keypair create my-keypair > my-keypair.pem
+chmod 400 my-keypair.pem
+
+# 공개키 가져오기
+openstack keypair create --public-key ~/.ssh/id_rsa.pub my-keypair
+
+# 키페어 삭제
+openstack keypair delete my-keypair
+```
+
+### 서버 마이그레이션 / 크기 조정
+
+```bash
+# 서버 크기 조정 (다른 플레이버로 변경)
+openstack server resize --flavor m1.large <server>
+openstack server resize confirm <server>   # 확인
+openstack server resize revert <server>    # 취소
+
+# 라이브 마이그레이션 (admin)
+openstack server migrate --live-migration <server>
+```
+
+---
+
+## 5. 이미지 (Glance)
+
+```bash
+# 이미지 목록
+openstack image list
+
+# 이미지 상세 정보
+openstack image show "Ubuntu 22.04"
+
+# 이미지 업로드
+openstack image create \
+  --file ubuntu-22.04-server-cloudimg-amd64.img \
+  --disk-format qcow2 \
+  --container-format bare \
+  --public \
+  "Ubuntu 22.04"
+
+# 이미지 다운로드
+openstack image save --file downloaded.img <image-id>
+
+# 이미지 속성 변경
+openstack image set --property hw_disk_bus=scsi "Ubuntu 22.04"
+
+# 이미지 공유 (프로젝트간)
+openstack image set --shared <image-id>
+openstack image add project <image-id> <target-project-id>
+
+# 이미지 삭제
+openstack image delete <image-id>
+```
+
+---
+
+## 6. 네트워크 (Neutron)
+
+### 네트워크 / 서브넷
+
+```bash
+# 네트워크 목록
+openstack network list
+
+# 네트워크 생성
+openstack network create my-network
+
+# 외부 네트워크 생성 (admin)
+openstack network create \
+  --external \
+  --provider-network-type flat \
+  --provider-physical-network physnet1 \
+  external-network
+
+# 서브넷 생성
+openstack subnet create \
+  --network my-network \
+  --subnet-range 192.168.100.0/24 \
+  --gateway 192.168.100.1 \
+  --dns-nameserver 8.8.8.8 \
+  --allocation-pool start=192.168.100.10,end=192.168.100.200 \
+  my-subnet
+
+# 네트워크 삭제
+openstack network delete my-network
+```
+
+### 라우터
+
+```bash
+# 라우터 생성
+openstack router create my-router
+
+# 외부 게이트웨이 설정
+openstack router set --external-gateway external-network my-router
+
+# 서브넷 연결
+openstack router add subnet my-router my-subnet
+
+# 라우터 정보
+openstack router show my-router
+
+# 서브넷 제거
+openstack router remove subnet my-router my-subnet
+```
+
+### 플로팅 IP
+
+```bash
+# 플로팅 IP 생성
+openstack floating ip create external-network
+
+# 플로팅 IP 목록
+openstack floating ip list
+
+# 서버에 플로팅 IP 연결
+openstack server add floating ip <server> <floating-ip>
+
+# 서버에서 플로팅 IP 해제
+openstack server remove floating ip <server> <floating-ip>
+
+# 플로팅 IP 삭제
+openstack floating ip delete <floating-ip>
+```
+
+### 보안 그룹
+
+```bash
+# 보안 그룹 목록
+openstack security group list
+
+# 보안 그룹 생성
+openstack security group create my-sg --description "Web 서버용"
+
+# 인바운드 룰 추가
+openstack security group rule create \
+  --protocol tcp \
+  --dst-port 22 \
+  --remote-ip 0.0.0.0/0 \
+  my-sg   # SSH 허용
+
+openstack security group rule create \
+  --protocol tcp \
+  --dst-port 80 \
+  my-sg   # HTTP 허용
+
+openstack security group rule create \
+  --protocol icmp \
+  my-sg   # ICMP(Ping) 허용
+
+# 보안 그룹 룰 목록
+openstack security group rule list my-sg
+
+# 룰 삭제
+openstack security group rule delete <rule-id>
+
+# 서버에 보안 그룹 추가
+openstack server add security group <server> my-sg
+openstack server remove security group <server> my-sg
+```
+
+---
+
+## 7. 볼륨 / 스토리지 (Cinder)
+
+```bash
+# 볼륨 목록
+openstack volume list
+
+# 볼륨 생성
+openstack volume create --size 100 my-volume
+
+# 볼륨 유형 지정 생성
+openstack volume create \
+  --size 200 \
+  --type ssd \
+  my-ssd-volume
+
+# 볼륨 상세 정보
+openstack volume show my-volume
+
+# 서버에 볼륨 연결
+openstack server add volume <server> my-volume
+
+# 서버에서 볼륨 해제
+openstack server remove volume <server> my-volume
+
+# 볼륨 스냅샷 생성
+openstack volume snapshot create \
+  --volume my-volume \
+  my-snapshot
+
+# 스냅샷 목록
+openstack volume snapshot list
+
+# 스냅샷에서 볼륨 복원
+openstack volume create \
+  --snapshot my-snapshot \
+  --size 100 \
+  restored-volume
+
+# 볼륨 삭제
+openstack volume delete my-volume
+
+# 볼륨 백업
+openstack volume backup create --name my-backup my-volume
+openstack volume backup list
+openstack volume backup restore my-backup
+```
+
+---
+
+## 8. 오브젝트 스토리지 (Swift)
+
+```bash
+# 컨테이너(버킷) 목록
+openstack container list
+
+# 컨테이너 생성
+openstack container create my-bucket
+
+# 오브젝트 업로드
+openstack object create my-bucket /local/path/file.txt
+openstack object create my-bucket /local/path/file.txt \
+  --name custom-name.txt   # 이름 지정
+
+# 오브젝트 목록
+openstack object list my-bucket
+
+# 오브젝트 다운로드
+openstack object save my-bucket file.txt
+openstack object save my-bucket file.txt \
+  --file /local/path/output.txt   # 저장 경로 지정
+
+# 오브젝트 삭제
+openstack object delete my-bucket file.txt
+
+# 컨테이너 삭제 (비어있어야 함)
+openstack container delete my-bucket
+
+# 임시 URL 생성 (서명된 URL)
+openstack object store account set \
+  --property Temp-URL-Key=my-secret-key
+
+openstack tempurl GET 3600 \
+  /v1/AUTH_<project-id>/my-bucket/file.txt \
+  my-secret-key
+```
+
+---
+
+## 9. 유용한 팁
+
+### 출력 형식 지정
+
+```bash
+# 테이블 형식 (기본)
+openstack server list --format table
+
+# JSON 형식
+openstack server list --format json
+
+# CSV 형식
+openstack server list --format csv
+
+# 특정 컬럼만 출력
+openstack server list -c Name -c Status -c "Power State"
+
+# 값만 출력 (스크립트 활용)
+openstack server show my-server -f value -c id
+```
+
+### 필터링 및 검색
+
+```bash
+# 상태로 필터링
+openstack server list --status ACTIVE
+openstack server list --status ERROR
+
+# 이름으로 검색
+openstack server list --name "web-*"
+
+# 정렬
+openstack server list --sort-column Name --sort-ascending
+```
+
+### 로그 및 디버깅
+
+```bash
+# 디버그 모드 실행
+openstack --debug server list
+
+# 자세한 오류 정보
+openstack --log-file openstack.log server list
+
+# 현재 인증 토큰 확인
+openstack token issue
+
+# 서비스 목록 확인
+openstack service list
+openstack endpoint list
+```
+
+### 자주 쓰는 별칭(alias) 설정
+
+```bash
+# ~/.bashrc 또는 ~/.zshrc에 추가
+alias osl='openstack server list'
+alias osn='openstack network list'
+alias osv='openstack volume list'
+alias osi='openstack image list'
+alias osf='openstack floating ip list'
+alias osg='openstack security group list'
+```
+
+### 일괄 작업 스크립트 예시
+
+```bash
+#!/usr/bin/env bash
+# 여러 서버 한번에 생성
+
+source openrc.sh
+
+SERVERS=("web-01" "web-02" "web-03")
+for srv in "${SERVERS[@]}"; do
+  openstack server create \
+    --flavor m1.small \
+    --image "Ubuntu 22.04" \
+    --network my-network \
+    --key-name my-keypair \
+    "$srv"
+  echo "서버 생성 요청: $srv"
+done
+
+echo "모든 서버 생성 요청 완료"
+openstack server list
+```
+
+---
+
+## 참고 자료
+
+- [OpenStack CLI 공식 문서](https://docs.openstack.org/python-openstackclient/latest/)
+- [OpenStack API 레퍼런스](https://docs.openstack.org/api-ref/)
+- [clouds.yaml 설정 가이드](https://docs.openstack.org/python-openstackclient/latest/configuration/index.html)
+
+
+
+
 #### ④ compute-node 설정
 
 ```bash
