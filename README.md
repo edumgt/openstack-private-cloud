@@ -232,7 +232,68 @@ Cinder   → apt install cinder-api   → DB 생성 → conf 수정 → db_sync
 Horizon  → apt install openstack-dashboard → apache2 재시작
 ```
 
-> 각 서비스 상세 conf 옵션은 `docs/vm_image/manual-install/` 디렉터리의 서비스별 가이드를 참조하세요.
+---
+
+#### 설치 중 모니터링
+
+ubuntu@controller-node:~$ cat ./openstack_dashboard.md
+# 🚀 OpenStack 설치 상태 대시보드
+
+업데이트 시간: 2026-06-08 01:48:21
+
+- [x] keystone ✅ 설치됨
+- [x] glance ✅ 설치됨
+- [x] nova ✅ 설치됨
+- [x] neutron ✅ 설치됨
+- [x] placement ✅ 설치됨
+
+---
+
+# 🖥️ 내 환경에서 OpenStack VM 실행 구조
+
+## 📋 환경 개요
+- **호스트**: Windows PC
+- **가상화 플랫폼**: VMware Workstation/Player
+- **게스트 OS**: Ubuntu VM (여기에 OpenStack 설치)
+- **OpenStack 서비스**: Control Node + Compute Node 역할을 동시에 수행
+- **대시보드**: Horizon
+- **인스턴스 이미지**: Ubuntu 22.04 LTS Cloud Image
+
+---
+
+## ⚙️ 실행 구조
+1. Windows PC 위에 VMware로 Ubuntu VM을 실행
+2. Ubuntu VM 안에 OpenStack 설치 (Control Node + Compute Node)
+3. Horizon 대시보드에서 VM 인스턴스 생성
+4. 선택한 **Ubuntu 22.04 LTS Cloud Image**가 OpenStack 인스턴스로 실행됨  
+   → 즉, VMware 위에 Ubuntu VM, 그 안에서 다시 VM이 실행되는 **Nested Virtualization** 구조
+
+---
+
+## ⚠️ 고려 사항
+- **성능 저하**: VMware → Ubuntu VM → OpenStack VM 구조라 CPU/메모리 오버헤드가 큼
+- **Nested Virtualization 지원**: VMware가 VT-x/AMD-V를 전달해야 KVM 기반 Nova-compute가 정상 동작
+- **네트워크 복잡성**: VMware NAT/Bridge와 OpenStack Neutron 네트워크가 겹치므로 Floating IP 및 라우팅 설정 필요
+
+---
+
+## ✅ 결론
+네, 현재 환경에서는 **Ubuntu VM(OpenStack 노드) 안에서 Ubuntu 22.04 LTS cloud image를 인스턴스로 띄우는 것**이 맞습니다.  
+즉, VMware 위에 또 VM을 올리는 구조로, Horizon을 통해 EC2와 유사한 VM을 실행할 수 있습니다.
+
+---
+
+## 🔗 관련 개념
+- **[Nested Virtualization](ca://s?q=OpenStack_Nested_Virtualization)**  
+- **[Horizon VM 생성](ca://s?q=OpenStack_Horizon_VM_생성)**  
+- **[Compute Node 역할](ca://s?q=OpenStack_Compute_Node_역할)**  
+
+---
+
+### horizon dashboard
+
+![alt text](./docs/image.png)
+
 
 #### ④ compute-node 설정
 
