@@ -17,14 +17,14 @@ services:
     networks:
     - shared-net
   db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     container_name: sample-db
     environment:
       POSTGRES_PASSWORD: example
     networks:
     - shared-net
   redis:
-    image: redis:7-alpine
+    image: valkey/valkey:8-alpine
     container_name: sample-redis
     networks:
     - shared-net

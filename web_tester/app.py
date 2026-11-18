@@ -6,6 +6,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Any
 
+import yaml
 from fastapi import FastAPI, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
@@ -37,8 +38,9 @@ PY_SOURCE_FILES = [
 PY_SOURCE_MAP = {source: REPO_ROOT / source for source in PY_SOURCE_FILES}
 
 app = FastAPI(
-    title="openstack-private-cloud python web tester",
-    version="1.0.0",
+    title="OpenStack Private Cloud & Ansible Control Center",
+    description="Interactive Smoke Tester, Hybrid Finance RAG Engine, Mock OpenStack Telemetry & 24-Lecture Curriculum Explorer",
+    version="2.0.0",
 )
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 
@@ -60,6 +62,16 @@ class RagQueryRequest(BaseModel):
 
 
 def _load_module(path: Path) -> tuple[bool, str | None]:
+    rel = path.relative_to(REPO_ROOT).with_suffix("")
+    mod_name = ".".join(rel.parts)
+    if mod_name.endswith(".__init__"):
+        mod_name = mod_name[: -len(".__init__")]
+    try:
+        importlib.import_module(mod_name)
+        return True, None
+    except Exception:  # noqa: BLE001
+        pass
+
     spec = importlib.util.spec_from_file_location(
         f"web_tester_dynamic_{path.stem}", str(path)
     )
@@ -163,6 +175,7 @@ def rag_query(request: RagQueryRequest) -> dict[str, Any]:
                 "doc_id": item.doc.doc_id,
                 "title": item.doc.title,
                 "category": item.doc.category,
+                "content": item.doc.content,
                 "tags": item.doc.tags,
             }
             for item in evidence
@@ -175,7 +188,9 @@ def mock_openstack_overview() -> dict[str, Any]:
     return {
         "keystone_version": mock_openstack_api.keystone_version_doc("127.0.0.1", 5000),
         "nova_services": mock_openstack_api.nova_services_doc(),
+        "hypervisors": mock_openstack_api.nova_hypervisors_doc(),
         "servers": mock_openstack_api.nova_servers_doc(),
+        "images": mock_openstack_api.glance_images_doc(),
         "networks": mock_openstack_api.neutron_networks_doc(),
         "subnets": mock_openstack_api.neutron_subnets_doc(),
         "volumes": mock_openstack_api.cinder_volumes_doc(),
@@ -200,4 +215,40 @@ def mock_openstack_pretty_token_doc() -> dict[str, str]:
             ensure_ascii=False,
             indent=2,
         )
+    }
+
+
+@app.get("/api/curriculum/overview")
+def curriculum_overview() -> dict[str, Any]:
+    lectures_dir = REPO_ROOT / "lectures"
+    items: list[dict[str, Any]] = []
+    if lectures_dir.exists():
+        for lec_dir in sorted(lectures_dir.iterdir()):
+            lec_file = lec_dir / "lecture.yml"
+            if lec_file.exists():
+                try:
+                    data = yaml.safe_load(lec_file.read_text(encoding="utf-8")) or {}
+                    lec_meta = data.get("lecture", {})
+                    items.append(
+                        {
+                            "id": lec_meta.get("id", lec_dir.name),
+                            "order": lec_meta.get("order", 0),
+                            "title": lec_meta.get("title", lec_dir.name),
+                            "module": lec_meta.get("module", "general"),
+                            "level": lec_meta.get("level", "intermediate"),
+                            "duration_minutes": lec_meta.get("duration_minutes", 45),
+                            "tags": lec_meta.get("tags", []),
+                        }
+                    )
+                except Exception:  # noqa: BLE001
+                    continue
+    playbooks_dir = REPO_ROOT / "ansible" / "playbooks"
+    playbooks = sorted(
+        [p.name for p in playbooks_dir.glob("*.yml")] if playbooks_dir.exists() else []
+    )
+    return {
+        "total_lectures": len(items),
+        "total_playbooks": len(playbooks),
+        "lectures": items,
+        "playbooks": playbooks,
     }

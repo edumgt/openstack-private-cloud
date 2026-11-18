@@ -1,7 +1,15 @@
-# AWS 모듈들은 boto3/botocore에 의존
-boto3>=1.28.0
-botocore>=1.31.0
+# Cloud & Infrastructure SDK
+boto3>=1.35.0
+botocore>=1.35.0
+PyYAML>=6.0.2
+
+# Web Control Center & API (FastAPI + Pydantic v2)
 fastapi>=0.115.0
-uvicorn>=0.30.0
-# 품질 도구(선택)
-ansible-lint>=6.20.0
+uvicorn>=0.32.0
+pydantic>=2.9.0
+httpx>=0.27.0
+
+# Quality & Testing Tools
+ansible-lint>=24.9.0
+pytest>=8.3.0
+ruff>=0.7.0

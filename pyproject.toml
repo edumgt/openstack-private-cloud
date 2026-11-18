@@ -1,0 +1,45 @@
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "openstack-private-cloud-lab"
+version = "2.0.0"
+description = "Enterprise OpenStack Private Cloud (2025.2 Epoxy) & Ansible IaC Hands-on Lab with DevSecOps and Hybrid RAG"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [
+  { name = "EduMGT Cloud Engineering Team" }
+]
+dependencies = [
+  "boto3>=1.35.0",
+  "botocore>=1.35.0",
+  "fastapi>=0.115.0",
+  "uvicorn>=0.32.0",
+  "pydantic>=2.9.0",
+  "PyYAML>=6.0.2",
+]
+
+[project.optional-dependencies]
+dev = [
+  "ansible-core>=2.17.0",
+  "ansible-lint>=24.9.0",
+  "pytest>=8.3.0",
+  "httpx>=0.27.0",
+  "ruff>=0.7.0",
+]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+addopts = "-v --tb=short"
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+ignore = ["E501"]

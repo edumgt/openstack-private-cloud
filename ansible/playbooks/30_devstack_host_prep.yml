@@ -8,7 +8,7 @@
     devstack_group: stack
     devstack_home: "/opt/devstack"
     devstack_repo: "https://opendev.org/openstack/devstack"
-    devstack_branch: stable/2024.2
+    devstack_branch: stable/2025.2
     devstack_host_ip: >-
       {{
         ansible_default_ipv4.address

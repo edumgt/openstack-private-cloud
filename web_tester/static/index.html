@@ -1,80 +1,173 @@
 <!doctype html>
-<html lang="ko">
+<html lang="ko" class="dark">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Python 백엔드 웹 테스터</title>
+    <title>OpenStack Private Cloud & Ansible Control Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      body {
+        font-family: 'Inter', 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+        background: radial-gradient(circle at 15% 15%, rgba(56, 189, 248, 0.12), transparent 35%),
+                    radial-gradient(circle at 85% 80%, rgba(225, 29, 72, 0.10), transparent 35%),
+                    #0b1120;
+      }
+      pre::-webkit-scrollbar { height: 6px; width: 6px; }
+      pre::-webkit-scrollbar-thumb { background: #334155; border-radius: 999px; }
+    </style>
   </head>
-  <body class="bg-slate-100 text-slate-900">
-    <main class="mx-auto max-w-6xl p-6 space-y-6">
-      <header class="space-y-2">
-        <h1 class="text-3xl font-bold">Python 백엔드 웹 테스터</h1>
-        <p class="text-slate-600">
-          FastAPI + Vanilla JS + Tailwind 기반으로 Python 소스 기능을 웹에서 테스트합니다.
-        </p>
-      </header>
-
-      <section class="bg-white rounded-xl shadow p-5 space-y-4">
-        <div class="flex items-center justify-between">
-          <h2 class="text-xl font-semibold">1) 전체 Python Smoke Test</h2>
-          <button
-            id="btnSmoke"
-            class="px-4 py-2 rounded-lg bg-blue-600 text-white hover:bg-blue-700"
-          >
-            실행
-          </button>
+  <body class="text-slate-100 min-h-screen">
+    <!-- Top Navigation Bar -->
+    <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-20">
+      <div class="mx-auto max-w-7xl px-6 py-4 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center gap-3">
+          <div class="h-10 w-10 rounded-xl bg-gradient-to-br from-rose-600 to-amber-500 flex items-center justify-center font-black text-white shadow-lg shadow-rose-600/30">
+            OS
+          </div>
+          <div>
+            <div class="flex items-center gap-2">
+              <h1 class="text-xl font-extrabold tracking-tight text-white">OpenStack Private Cloud Control Center</h1>
+              <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-sky-500/15 text-sky-400 border border-sky-500/30">v2.0 · 2025.2 Epoxy</span>
+            </div>
+            <p class="text-xs text-slate-400">FastAPI · Hybrid Finance RAG (BM25 + TF-IDF) · Mock OpenStack Telemetry · 24 Ansible Labs</p>
+          </div>
         </div>
-        <pre
-          id="smokeResult"
-          class="bg-slate-900 text-slate-100 rounded-lg p-4 overflow-auto text-sm min-h-24"
-        ></pre>
+        <div class="flex items-center gap-2 text-xs">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 font-semibold">
+            <span class="h-2 w-2 rounded-full bg-emerald-400 animate-pulse"></span>
+            API Server Online
+          </span>
+          <a href="/docs" target="_blank" class="px-3 py-1.5 rounded-full bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 font-medium transition">
+            OpenAPI Swagger ↗
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="mx-auto max-w-7xl px-6 py-8 space-y-8">
+      <!-- Top KPI Summary Row -->
+      <section class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 shadow-lg">
+          <div class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Python Smoke Suite</div>
+          <div id="kpiSmoke" class="text-2xl font-extrabold text-emerald-400 mt-1">8 / 8 PASS</div>
+          <div class="text-xs text-slate-400 mt-1">Dynamic Module Loader Verification</div>
+        </div>
+        <div class="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 shadow-lg">
+          <div class="text-xs uppercase tracking-wider text-slate-400 font-semibold">OpenStack Topology</div>
+          <div id="kpiOpenstack" class="text-2xl font-extrabold text-sky-400 mt-1">2 Active VMs</div>
+          <div class="text-xs text-slate-400 mt-1">Keystone v3.14 · Nova · Neutron · Cinder</div>
+        </div>
+        <div class="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 shadow-lg">
+          <div class="text-xs uppercase tracking-wider text-slate-400 font-semibold">Hybrid RAG Engine</div>
+          <div class="text-2xl font-extrabold text-amber-400 mt-1">BM25 + TF-IDF</div>
+          <div class="text-xs text-slate-400 mt-1">8 Curated Quant & FinOps Knowledge Docs</div>
+        </div>
+        <div class="rounded-2xl bg-slate-900/90 border border-slate-800 p-4 shadow-lg">
+          <div class="text-xs uppercase tracking-wider text-slate-400 font-semibold">IaC Curriculum</div>
+          <div id="kpiLectures" class="text-2xl font-extrabold text-violet-400 mt-1">24 Lectures</div>
+          <div class="text-xs text-slate-400 mt-1">Ansible Foundation → OpenStack & DevSecOps</div>
+        </div>
       </section>
 
-      <section class="bg-white rounded-xl shadow p-5 space-y-4">
-        <h2 class="text-xl font-semibold">2) RAG Query Test</h2>
-        <div class="grid md:grid-cols-4 gap-3">
-          <input
-            id="queryInput"
-            class="md:col-span-3 border rounded-lg px-3 py-2"
-            placeholder="질문을 입력하세요"
-            value="금리 상승기에 듀레이션 리스크를 어떻게 관리하나요?"
-          />
-          <input
-            id="topKInput"
-            class="border rounded-lg px-3 py-2"
-            type="number"
-            min="1"
-            value="3"
-          />
-        </div>
-        <button
-          id="btnRag"
-          class="px-4 py-2 rounded-lg bg-emerald-600 text-white hover:bg-emerald-700"
-        >
-          질의 실행
-        </button>
-        <pre
-          id="ragResult"
-          class="bg-slate-900 text-slate-100 rounded-lg p-4 overflow-auto text-sm min-h-24"
-        ></pre>
-      </section>
+      <!-- Main Grid: 1) Smoke Test & 3) Mock OpenStack Telemetry -->
+      <div class="grid lg:grid-cols-12 gap-6">
+        <!-- Left Column: Smoke Test + RAG -->
+        <div class="lg:col-span-7 space-y-6">
+          <!-- 1) Python Smoke Test -->
+          <section class="rounded-2xl bg-slate-900/90 border border-slate-800 p-6 shadow-xl space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-blue-400">Module 01 · Quality Gate</span>
+                <h2 class="text-lg font-bold text-white">1) 전체 Python 모듈 Smoke Test</h2>
+              </div>
+              <button
+                id="btnSmoke"
+                class="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-sm font-semibold shadow-lg shadow-blue-600/25 transition"
+              >
+                검사 실행
+              </button>
+            </div>
+            <div id="smokeBadges" class="grid grid-cols-2 sm:grid-cols-4 gap-2"></div>
+            <pre
+              id="smokeResult"
+              class="bg-slate-950 text-slate-200 border border-slate-800 rounded-xl p-4 overflow-auto text-xs max-h-48"
+            ></pre>
+          </section>
 
-      <section class="bg-white rounded-xl shadow p-5 space-y-4">
-        <div class="flex items-center justify-between">
-          <h2 class="text-xl font-semibold">3) Mock OpenStack Test</h2>
-          <button
-            id="btnMock"
-            class="px-4 py-2 rounded-lg bg-violet-600 text-white hover:bg-violet-700"
-          >
-            조회
-          </button>
+          <!-- 2) Hybrid RAG Query Test -->
+          <section class="rounded-2xl bg-slate-900/90 border border-slate-800 p-6 shadow-xl space-y-4">
+            <div class="flex items-center justify-between flex-wrap gap-2">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Module 02 · Quant & Cloud FinOps AI</span>
+                <h2 class="text-lg font-bold text-white">2) Hybrid Finance RAG 질의 테스트 (BM25 + TF-IDF)</h2>
+              </div>
+              <button
+                id="btnRag"
+                class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-semibold shadow-lg shadow-emerald-600/25 transition"
+              >
+                질의 실행
+              </button>
+            </div>
+            <div class="grid md:grid-cols-5 gap-3">
+              <input
+                id="queryInput"
+                class="md:col-span-4 bg-slate-950 border border-slate-700 rounded-xl px-3.5 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
+                placeholder="질문을 입력하세요"
+                value="금리 상승기에 듀레이션 리스크와 클라우드 그리드 인프라를 어떻게 관리하나요?"
+              />
+              <input
+                id="topKInput"
+                class="bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
+                type="number"
+                min="1"
+                max="8"
+                value="3"
+              />
+            </div>
+            <div id="ragCards" class="grid sm:grid-cols-3 gap-3"></div>
+            <pre
+              id="ragResult"
+              class="bg-slate-950 text-slate-200 border border-slate-800 rounded-xl p-4 overflow-auto text-xs max-h-56"
+            ></pre>
+          </section>
         </div>
-        <pre
-          id="mockResult"
-          class="bg-slate-900 text-slate-100 rounded-lg p-4 overflow-auto text-sm min-h-24"
-        ></pre>
-      </section>
+
+        <!-- Right Column: Mock OpenStack & Curriculum -->
+        <div class="lg:col-span-5 space-y-6">
+          <!-- 3) Mock OpenStack Telemetry -->
+          <section class="rounded-2xl bg-slate-900/90 border border-slate-800 p-6 shadow-xl space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-violet-400">Module 03 · Private Cloud API</span>
+                <h2 class="text-lg font-bold text-white">3) Mock OpenStack 클러스터 상태</h2>
+              </div>
+              <button
+                id="btnMock"
+                class="px-4 py-2 rounded-xl bg-violet-600 hover:bg-violet-500 text-white text-sm font-semibold shadow-lg shadow-violet-600/25 transition"
+              >
+                텔레메트리 조회
+              </button>
+            </div>
+            <div id="mockSummaryCards" class="grid grid-cols-2 gap-3"></div>
+            <pre
+              id="mockResult"
+              class="bg-slate-950 text-slate-200 border border-slate-800 rounded-xl p-4 overflow-auto text-xs max-h-64"
+            ></pre>
+          </section>
+
+          <!-- 4) 24-Lecture Curriculum Matrix -->
+          <section class="rounded-2xl bg-slate-900/90 border border-slate-800 p-6 shadow-xl space-y-4">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-xs font-bold uppercase tracking-wider text-amber-400">Module 04 · 24-Lecture Track</span>
+                <h2 class="text-lg font-bold text-white">4) Ansible & OpenStack 실습 커리큘럼</h2>
+              </div>
+              <span class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 text-slate-300">lecture01 ~ lecture24</span>
+            </div>
+            <div id="curriculumList" class="space-y-2 max-h-64 overflow-auto pr-1 text-xs"></div>
+          </section>
+        </div>
+      </div>
     </main>
 
     <script>
@@ -91,8 +184,9 @@
         return payload;
       }
 
-      document.getElementById("btnSmoke").addEventListener("click", async () => {
+      async function runSmokeTest() {
         const output = document.getElementById("smokeResult");
+        const badges = document.getElementById("smokeBadges");
         output.textContent = "실행 중...";
         try {
           const data = await getJson("/api/python/smoke-test", {
@@ -100,14 +194,26 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({}),
           });
+          document.getElementById("kpiSmoke").textContent = `${data.success} / ${data.total} PASS`;
+          badges.innerHTML = (data.results || []).map((r) => {
+            const shortName = r.path.split("/").slice(-2).join("/");
+            const cls = r.ok
+              ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-300"
+              : "bg-rose-500/10 border-rose-500/30 text-rose-300";
+            return `<div class="border rounded-lg px-2.5 py-1.5 text-xs flex items-center justify-between ${cls}">
+              <span class="truncate font-mono">${shortName}</span>
+              <span class="font-bold ml-1">${r.ok ? "OK" : "ERR"}</span>
+            </div>`;
+          }).join("");
           output.textContent = formatJson(data);
         } catch (error) {
           output.textContent = String(error);
         }
-      });
+      }
 
-      document.getElementById("btnRag").addEventListener("click", async () => {
+      async function runRagQuery() {
         const output = document.getElementById("ragResult");
+        const cards = document.getElementById("ragCards");
         output.textContent = "실행 중...";
         const query = document.getElementById("queryInput").value.trim();
         const topK = Number(document.getElementById("topKInput").value) || 3;
@@ -118,21 +224,77 @@
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ query, top_k: topK }),
           });
+          cards.innerHTML = (data.evidence || []).map((ev, idx) => `
+            <div class="rounded-xl bg-slate-950/90 border border-slate-800 p-3 space-y-1.5">
+              <div class="flex items-center justify-between text-xs">
+                <span class="px-2 py-0.5 rounded bg-emerald-500/15 text-emerald-400 font-bold">#${idx + 1} · ${ev.doc_id}</span>
+                <span class="font-mono text-amber-400 font-semibold">score ${ev.score.toFixed(3)}</span>
+              </div>
+              <div class="font-bold text-xs text-white truncate">${ev.title}</div>
+              <div class="text-[11px] text-slate-400 line-clamp-2">${ev.content || ""}</div>
+            </div>
+          `).join("");
           output.textContent = formatJson(data);
         } catch (error) {
           output.textContent = String(error);
         }
-      });
+      }
 
-      document.getElementById("btnMock").addEventListener("click", async () => {
+      async function runMockOpenStack() {
         const output = document.getElementById("mockResult");
+        const cards = document.getElementById("mockSummaryCards");
         output.textContent = "실행 중...";
         try {
           const data = await getJson("/api/mock-openstack/overview");
+          const servers = (data.servers && data.servers.servers) || [];
+          document.getElementById("kpiOpenstack").textContent = `${servers.length} Active VMs`;
+          cards.innerHTML = servers.map((srv) => {
+            const netName = Object.keys(srv.addresses || {})[0] || "net";
+            const ip = srv.addresses?.[netName]?.[0]?.addr || "N/A";
+            const volId = srv["os-extended-volumes:volumes_attached"]?.[0]?.id?.slice(0, 8) || "vol";
+            return `<div class="rounded-xl bg-slate-950/90 border border-slate-800 p-3 space-y-1">
+              <div class="flex items-center justify-between">
+                <span class="font-bold text-sm text-white">${srv.name}</span>
+                <span class="px-2 py-0.5 text-[10px] rounded-full bg-emerald-500/20 text-emerald-400 font-bold">${srv.status}</span>
+              </div>
+              <div class="text-xs text-slate-400 font-mono">${netName}: ${ip}</div>
+              <div class="text-[11px] text-sky-400 font-mono">Flavor: ${srv.flavor.id} · Vol: ${volId}</div>
+            </div>`;
+          }).join("");
           output.textContent = formatJson(data);
         } catch (error) {
           output.textContent = String(error);
         }
+      }
+
+      async function loadCurriculum() {
+        const listEl = document.getElementById("curriculumList");
+        try {
+          const data = await getJson("/api/curriculum/overview");
+          document.getElementById("kpiLectures").textContent = `${data.total_lectures} Lectures`;
+          listEl.innerHTML = (data.lectures || []).map((lec) => `
+            <div class="flex items-center justify-between rounded-lg bg-slate-950/80 border border-slate-800/90 px-3 py-2">
+              <div class="truncate pr-2">
+                <span class="font-mono text-amber-400 font-semibold mr-1.5">${lec.id}</span>
+                <span class="text-slate-200 font-medium">${lec.title}</span>
+              </div>
+              <span class="shrink-0 px-2 py-0.5 rounded bg-slate-800 text-slate-400 font-mono text-[10px]">${lec.module}</span>
+            </div>
+          `).join("");
+        } catch (error) {
+          listEl.textContent = String(error);
+        }
+      }
+
+      document.getElementById("btnSmoke").addEventListener("click", runSmokeTest);
+      document.getElementById("btnRag").addEventListener("click", runRagQuery);
+      document.getElementById("btnMock").addEventListener("click", runMockOpenStack);
+
+      window.addEventListener("DOMContentLoaded", () => {
+        runSmokeTest();
+        runRagQuery();
+        runMockOpenStack();
+        loadCurriculum();
       });
     </script>
   </body>
